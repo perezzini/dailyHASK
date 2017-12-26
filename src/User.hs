@@ -3,6 +3,8 @@
 module User
     (
     User(..)
+    , Name(..)
+    , newName
     , getID
     , getName
     , getEmail
@@ -26,8 +28,6 @@ import Data.Text as Text hiding (last)
 -- ObjectID
 type ID = Bson.Value
 
-type Email = Text
-
 data Name = Name {
   first :: Text
   , last :: Text
@@ -39,10 +39,16 @@ getFirstName = first
 getLastName :: Name -> Text
 getLastName = last
 
+newName :: String -> String -> Name
+newName first last = Name {
+  first = Text.pack first
+  , last = Text.pack last
+}
+
 data User = User {
   _id :: ID
   , name :: Name
-  , email :: Email
+  , email :: Mail.Address
   , location :: Location.GeoLoc
   , interests :: [Interest]
 } deriving (Show)
@@ -61,7 +67,7 @@ getName user = let
   name = name
   in (getFirstName name, getLastName name)
 
-getEmail :: User -> Email
+getEmail :: User -> Mail.Address
 getEmail = email
 
 getLocation :: User -> Location.GeoLoc
@@ -70,38 +76,39 @@ getLocation = location
 getInterests :: User -> [Interest]
 getInterests = interests
 
-newUserData :: ID -> Name -> Email -> Location.GeoLoc -> User
-newUserData id name email location = User {
+newUserData :: ID -> Name -> Mail.Address -> Location.GeoLoc -> [Interest] -> User
+newUserData id name email location interests = User {
   _id = id
   , name = name
   , email = email
   , location = location
-  , interests = []
+  , interests = interests
 }
 
-newUser :: Name -> Email -> Location.GeoLoc -> IO User
-newUser name email location = do
+newUser :: Name -> Mail.Address -> Location.GeoLoc -> [Interest] -> IO User
+newUser name email location interests = do
   let firstName = getFirstName name
   let lastName = getLastName name
   let locationAddress = Location.getAddress location
   let locationLat = Location.getLat location
   let locationLong = Location.getLong location
 
-  let postName = ["firstName" =: firstName
+  let namePost = ["firstName" =: firstName
                   , "lastName" =: lastName] :: Bson.Document
   let locationPost = ["address" =: locationAddress
                       , "lat" =: locationLat
                       , "long" =: locationLong] :: Bson.Document
-  let post = ["name" =: postName
+  let post = ["name" =: namePost
               , "email" =: email
-              , "location" =: locationPost] :: Bson.Document
+              , "location" =: locationPost
+              , "interests" =: interests] :: Bson.Document
 
   collection <- collection
   pipe <- DB.open
   _id <- DB.insert pipe collection post
   DB.close pipe
 
-  let user = newUserData _id name email location
+  let user = newUserData _id name email location interests
   return (user)
 
 deleteUser :: ID -> IO ()
