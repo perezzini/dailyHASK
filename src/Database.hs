@@ -13,12 +13,8 @@ module Database
 
 import qualified Database.MongoDB as MongoDB
 import qualified Config
-
 import qualified Data.Text as Text
-
 import qualified Data.Maybe as M
-
-import Control.Monad.IO.Class
 import qualified Data.Bson as Bson
 
 server :: IO String
