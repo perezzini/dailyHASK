@@ -20,6 +20,7 @@ import Interest
 import Location
 import Database as DB
 import Config
+import Mail
 
 import Data.Bson as Bson
 import qualified Data.Maybe as M
