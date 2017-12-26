@@ -3,6 +3,8 @@
 module Location
     (
     GeoLoc(..)
+    , stringToAddress
+    , addressToString
     , getAddress
     , getLat
     , getLong
@@ -28,3 +30,11 @@ getLat = lat
 
 getLong :: GeoLoc -> Longitude
 getLong = long
+
+stringToAddress :: String -> Address
+stringToAddress = Text.pack
+
+addressToString :: Address -> String
+addressToString = Text.unpack
+
+--fromAddressToCoord :: Address -> (Latitude, Longitude)
