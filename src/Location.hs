@@ -18,8 +18,10 @@ import Config
 import Url
 import Utils
 import Json
+import Error as E
 
 import Data.Aeson
+import qualified Data.Aeson.Lens as Lens (key, _String)
 import Network.Wreq
 import Control.Lens
 
@@ -66,21 +68,31 @@ addressToString = Text.unpack
 endpoint :: IO Url
 endpoint = do
   value <- Config.getValue "api.googlemaps.endpoint"
-  return (M.fromJust value)
+  if M.isNothing value
+    then E.callError "Error: api.googlemaps.endpoint config value not found"
+    else return (Text.pack $ M.fromJust value)
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.googlemaps.key"
-  return (Text.pack $ M.fromJust value)
+  if M.isNothing value
+    then E.callError "Error: api.googlemaps.key not found"
+    else return (Text.pack $ M.fromJust value)
+
+apiRequestOk :: Text -> Bool
+apiRequestOk t = if t == "OK" || t == "ok"
+  then True
+  else False
 
 getGeoLocFromString :: String -> IO (Maybe GeoLoc)
 getGeoLocFromString address = do
   endpoint <- endpoint
   key <- key
-  let address' = Text.pack $ Utils.replaceCharInString ' ' '+' address
+  let address' = Text.pack $ Utils.replaceCharByCharInString ' ' '+' address
   let opts = defaults & param "key" .~ [key] & param "address" .~ [address']
-  req <- getWith opts endpoint
-  let headerStatus = req ^. responseStatus . statusCode
-  if Json.requestIsOk headerStatus
+  req <- getWith opts (Text.unpack endpoint)
+  let headerStatusCode = req ^. responseStatus . statusCode
+  let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
+  if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return (Nothing)
