@@ -17,20 +17,28 @@ import qualified Data.Text as Text
 import qualified Data.Maybe as M
 import qualified Data.Bson as Bson
 
+import Error as E
+
 server :: IO String
 server = do
   value <- Config.getValue "database.server"
-  return (M.fromJust value)
+  if M.isNothing value
+    then E.callError "Error: database.server config value not found"
+    else return (M.fromJust value)
 
 port :: IO String
 port = do
   value <- Config.getValue "database.port"
-  return (M.fromJust value)
+  if M.isNothing value
+    then E.callError "Error: database.port config value not found"
+    else return (M.fromJust value)
 
 db :: IO String
 db = do
   value <- Config.getValue "database.db"
-  return (M.fromJust value)
+  if M.isNothing value
+    then E.callError "Error: database.db config file value not found"
+    else return (M.fromJust value)
 
 open :: IO MongoDB.Pipe
 open = do
