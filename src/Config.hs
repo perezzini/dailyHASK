@@ -18,6 +18,4 @@ getValue key = do
   let filePath = currDir ++ appConfigFile
   configFile <- TConfig.readConfig filePath
   let value = TConfig.getValue key configFile
-  if M.isNothing value
-    then E.callError "Error - Config. Key not found"
-    else return (value)
+  return (value)
