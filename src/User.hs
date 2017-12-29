@@ -94,8 +94,8 @@ newUser name email location interests = do
   let locationLat = Location.getLat location
   let locationLong = Location.getLong location
 
-  let namePost = ["firstName" =: firstName
-                  , "lastName" =: lastName] :: Bson.Document
+  let namePost = ["first" =: firstName
+                  , "last" =: lastName] :: Bson.Document
   let locationPost = ["address" =: locationAddress
                       , "lat" =: locationLat
                       , "long" =: locationLong] :: Bson.Document
