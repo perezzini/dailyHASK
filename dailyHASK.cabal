@@ -44,6 +44,8 @@ library
       , wreq
       , lens-aeson
       , vector
+      , smtp-mail
+      , mime-mail
   exposed-modules:
       Error
       Date
