@@ -11,6 +11,7 @@ module Mail
     ) where
 
 import Data.Text as Text
+import qualified Data.Text.Lazy as L
 import Data.Maybe as M
 
 import Config
@@ -55,7 +56,7 @@ send mail = do
   port <- port
   SMTP.sendMail' hostName (fromInteger port) mail
 
-createMailAndSend :: Host -> Host -> Subject -> Mime.Part -> Mime.Part -> IO ()
+createMailAndSend :: Host -> Host -> Subject -> L.Text -> L.Text -> IO ()
 createMailAndSend from to subject body html = do
-  let mail = createMail from to subject body html
+  let mail = createMail from to subject (SMTP.plainTextPart body) (SMTP.htmlPart html)
   send mail
