@@ -4,6 +4,7 @@ module Utils
     , listOfStringsToListOfText
     , replaceCharByCharInString
     , connectListOfStrings
+    , stringToInteger
     ) where
 
 import Data.Text as Text hiding (map)
@@ -20,3 +21,6 @@ replaceCharByCharInString oldChar newChar str = map (\c -> if c == oldChar then 
 connectListOfStrings :: [String] -> String -> String
 connectListOfStrings (x : []) _ = x
 connectListOfStrings (x : xs) repl = x ++ repl ++ (connectListOfStrings xs repl)
+
+stringToInteger :: String -> Integer
+stringToInteger s = read s
