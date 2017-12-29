@@ -1,14 +1,55 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
+
+import Prelude hiding (last)
 
 import Control.Concurrent
 import Control.Monad
 import Data.Time.Clock
 import System.Cron
 
+import Data.Maybe as M
+
+import User
+import Interest
+import Mail
+import Location
+import Error as E
+
+createNewGeoLoc :: String -> IO Location.GeoLoc
+createNewGeoLoc address = do
+  geoLocAttempt <- Location.getGeoLocFromString address
+  if M.isNothing geoLocAttempt
+    then E.callError "Error. Main. createNewGeoLoc: failed when requesting location coordinates from address"
+    else return $ M.fromJust geoLocAttempt
+
+createNewUser :: IO User
+createNewUser = do
+  putStrLn "** NEW USER **"
+  putStrLn "> First Name:"
+  userFirstName <- getLine
+  putStrLn "> Last Name:"
+  userLastName <- getLine
+  let userName = User.newName userFirstName userLastName
+  putStrLn "> E-mail Address:"
+  userEmail <- getLine
+  let userEmail' = Mail.stringToAddress userEmail
+  putStrLn "> User's location (e.g: 'rosario, santa fe, argentina'):"
+  userLocationAddress <- getLine
+  userGeoLoc <- createNewGeoLoc userLocationAddress
+  putStrLn "Interests (keywords separated by a space):"
+  userInterestsString <- getLine
+  let userInterests = Interest.toDataType $ words userInterestsString
+  newUser <- User.newUser userName userEmail' userGeoLoc userInterests
+  return $ newUser
+
 main :: IO ()
 main = do
-  putStrLn "getUserData()"
-  putStrLn "updateDB()"
+  putStrLn ".::. Welcome to dailyHASK .::."
+  newUser <- createNewUser
+  Mail.createMailAndSend (Just "dailyHASK", "dailyhask@perezzini.com") (Nothing, "lperezzini@gmail.com") "subject" "email body" "<h1>HTML</h1>"
+  putStrLn "sendWelcomeEmailToRecentlyCreatedUser()"
   putStrLn "Want to create another user? [Y/N]"
   line <- getLine
   if line == "Y"
