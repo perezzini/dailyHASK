@@ -2,7 +2,9 @@
 
 module News
     (
-    getNews
+    News(..)
+    , Article(..)
+    , getNews
     , getNewsTotal
     , getNewsArticles
     , getArticleSourceName
@@ -23,7 +25,6 @@ import Error as E
 
 import Data.Text as Text
 import Data.Maybe as M
-import qualified Data.Vector as V
 
 import Data.Aeson
 import qualified Data.Aeson.Lens as Lens (key, _String)
