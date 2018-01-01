@@ -44,8 +44,7 @@ library
       , wreq
       , lens-aeson
       , vector
-      , smtp-mail
-      , mime-mail
+      , HaskellNet-SSL
   exposed-modules:
       Error
       Date
