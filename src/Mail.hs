@@ -4,10 +4,12 @@ module Mail
     (
     Address
     , Subject
-    , Host
     , stringToAddress
     , addressToString
-    , createMailAndSend
+    , connect
+    , closeConnection
+    , auth
+    , send
     ) where
 
 import Data.Text as Text
@@ -17,12 +19,10 @@ import Data.Maybe as M
 import Config
 import Error as E
 
-import qualified Network.Mail.SMTP as SMTP
-import qualified Network.Mail.Mime as Mime
+import Network.HaskellNet.SMTP.SSL as SMTP
 
 type Address = Text
 type Subject = Text
-type Host = (Maybe Text, Address)
 
 stringToAddress :: String -> Address
 stringToAddress = Text.pack
@@ -30,33 +30,57 @@ stringToAddress = Text.pack
 addressToString :: Address -> String
 addressToString = Text.unpack
 
-hostname :: IO String
-hostname = do
-  value <- Config.getValue "mail.hostname"
+smtpHostname :: IO String
+smtpHostname = do
+  value <- Config.getValue "smtp.hostname"
   if M.isNothing value
-    then E.callError "Error: mail.hostname config value not found"
+    then E.callError "Error: smtp.hostname config value not found"
     else return $ M.fromJust value
 
-port :: IO Integer
-port = do
-  value <- Config.getValue "mail.port.number"
+smtpUserName :: IO String
+smtpUserName = do
+  value <- Config.getValue "smtp.user.name.address"
   if M.isNothing value
-    then E.callError "Error: mail.port.number config value not found"
-    else return $ read $ M.fromJust value
+    then E.callError "Error: smtp.user.name.address config value not found"
+    else return $ M.fromJust value
 
-createMail :: Host -> Host -> Subject -> Mime.Part -> Mime.Part -> Mime.Mail
-createMail (fm, fa) (tm, ta) subject body html = let
-  from = SMTP.Address fm fa
-  to = [SMTP.Address tm ta]
-  in SMTP.simpleMail from to [] [] subject [body, html]
+smtpUserNamePassword :: IO String
+smtpUserNamePassword = do
+  value <- Config.getValue "smtp.user.password"
+  if M.isNothing value
+    then E.callError "Error: smtp.user.password config value not found"
+    else return $ M.fromJust value
 
-send :: Mime.Mail -> IO ()
-send mail = do
-  hostName <- hostname
-  port <- port
-  SMTP.sendMail' hostName (fromInteger port) mail
+smtpMailAddressAlias :: IO String
+smtpMailAddressAlias = do
+  value <- Config.getValue "smtp.mail.address.alias"
+  if M.isNothing value
+    then E.callError "Error: smtp.mail.address.alias config value not found"
+    else return $ M.fromJust value
 
-createMailAndSend :: Host -> Host -> Subject -> L.Text -> L.Text -> IO ()
-createMailAndSend from to subject body html = do
-  let mail = createMail from to subject (SMTP.plainTextPart body) (SMTP.htmlPart html)
-  send mail
+connect :: IO SMTPConnection
+connect = do
+  hostname <- smtpHostname
+  conn <- SMTP.connectSMTPSSL hostname
+  return $ conn
+
+closeConnection :: SMTPConnection -> IO ()
+closeConnection conn = SMTP.closeSMTP conn
+
+auth :: SMTPConnection -> IO ()
+auth conn = do
+  userName <- smtpUserName
+  userNamePassword <- smtpUserNamePassword
+  status <- SMTP.authenticate LOGIN userName userNamePassword conn
+  if not status
+    then E.callError "Mail. Auth denied. Aborting..."
+    else return $ ()
+
+send :: SMTPConnection -> Text -> Text -> Text -> Text -> IO ()
+send conn receiver subject plainTextBody htmlBody = do
+  let receiver' = Text.unpack receiver :: String
+  senderAlias <- smtpMailAddressAlias
+  let subject' = Text.unpack subject :: String
+  let plainTextBody' = L.pack $ Text.unpack plainTextBody :: L.Text
+  let htmlBody' = L.pack $ Text.unpack htmlBody :: L.Text
+  SMTP.sendMimeMail receiver' senderAlias subject' plainTextBody' htmlBody' [] conn
