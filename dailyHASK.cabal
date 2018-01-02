@@ -45,6 +45,7 @@ library
       , lens-aeson
       , vector
       , HaskellNet-SSL
+      , blaze-html
   exposed-modules:
       Error
       Date
@@ -55,6 +56,7 @@ library
       Database
       Url
       Mail
+      Html
       Json
       News
       Utils
