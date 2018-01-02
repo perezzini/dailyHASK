@@ -7,6 +7,8 @@ module User
     , newName
     , getID
     , getName
+    , getFirstName
+    , getLastName
     , getEmail
     , getLocation
     , getInterests
@@ -63,10 +65,8 @@ collection = do
 getID :: User -> ID
 getID = _id
 
-getName :: User -> (Text, Text)
-getName user = let
-  name = name
-  in (getFirstName name, getLastName name)
+getName :: User -> Name
+getName user = name user
 
 getEmail :: User -> Mail.Address
 getEmail = email
