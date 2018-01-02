@@ -15,6 +15,7 @@ import User
 import Interest
 import Mail
 import Location
+import Html
 import Error as E
 
 createNewGeoLoc :: String -> IO Location.GeoLoc
@@ -44,12 +45,20 @@ createNewUser = do
   newUser <- User.newUser userName userEmail' userGeoLoc userInterests
   return $ newUser
 
+sendWelcomeMailToUser :: User -> IO ()
+sendWelcomeMailToUser user = do
+  let userEmailAddress = User.getEmail user
+  conn <- Mail.connect
+  Mail.auth conn
+  Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
+  Mail.closeConnection conn
+  return $ ()
+
 main :: IO ()
 main = do
   putStrLn ".::. Welcome to dailyHASK .::."
   newUser <- createNewUser
-  Mail.createMailAndSend (Just "dailyHASK", "dailyhask@perezzini.com") (Nothing, "lperezzini@gmail.com") "subject" "email body" "<h1>HTML</h1>"
-  putStrLn "sendWelcomeEmailToRecentlyCreatedUser()"
+  sendWelcomeMailToUser newUser
   putStrLn "Want to create another user? [Y/N]"
   line <- getLine
   if line == "Y"
