@@ -76,11 +76,11 @@ auth conn = do
     then E.callError "Mail. Auth denied. Aborting..."
     else return $ ()
 
-send :: SMTPConnection -> Text -> Text -> Text -> Text -> IO ()
+send :: SMTPConnection -> Text -> Text -> Text -> String -> IO ()
 send conn receiver subject plainTextBody htmlBody = do
   let receiver' = Text.unpack receiver :: String
   senderAlias <- smtpMailAddressAlias
   let subject' = Text.unpack subject :: String
   let plainTextBody' = L.pack $ Text.unpack plainTextBody :: L.Text
-  let htmlBody' = L.pack $ Text.unpack htmlBody :: L.Text
+  let htmlBody' = L.pack htmlBody :: L.Text
   SMTP.sendMimeMail receiver' senderAlias subject' plainTextBody' htmlBody' [] conn
