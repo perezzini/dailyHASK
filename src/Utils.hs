@@ -5,6 +5,7 @@ module Utils
     , replaceCharByCharInString
     , connectListOfStrings
     , stringToInteger
+    , handleNullValue
     ) where
 
 import Data.Text as Text hiding (map)
@@ -24,3 +25,7 @@ connectListOfStrings (x : xs) repl = x ++ repl ++ (connectListOfStrings xs repl)
 
 stringToInteger :: String -> Integer
 stringToInteger s = read s
+
+handleNullValue :: Maybe a -> Either Text a
+handleNullValue (Just v) = Right v
+handleNullValue _ = Left $ Text.pack "Not available"
