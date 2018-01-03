@@ -20,6 +20,7 @@ import Config
 import Interest
 import Json
 import Url
+import Date
 import Utils
 import Error as E
 
@@ -98,14 +99,14 @@ endpoint e = do
     then let
       errorMsg = "Error: " ++ e ++ " config value not found"
       in E.callError errorMsg
-    else return (Text.pack $ M.fromJust value)
+    else return $ Text.pack $ M.fromJust value
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.news.key"
   if M.isNothing value
     then E.callError "Error: api.news.key not found"
-    else return (Text.pack $ M.fromJust value)
+    else return $ Text.pack $ M.fromJust value
 
 apiRequestOk :: Text -> Bool
 apiRequestOk t = if t == "OK" || t == "ok"
@@ -116,11 +117,17 @@ getNews :: [Interest] -> IO (Maybe News)
 getNews interests = do
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
+  today <- Date.getSimpleDate
+  let today' = Text.pack today
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
-  let opts = defaults & param "apiKey" .~ [key] & param "q" .~ [interests'] -- TODO: add time lapse?
+  let opts = defaults & param "apiKey" .~ [key]
+          & param "q" .~ [interests']
+          & param "sortBy" .~ ["popularity"]
+          & param "language" .~ ["en"]
+          & param "from" .~ [today']
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
   if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
-    else return (Nothing)
+    else return $ Nothing
