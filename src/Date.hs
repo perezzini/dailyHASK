@@ -2,6 +2,7 @@ module Date
     (
     Date
     , getCurrentDate
+    , getSimpleDate
     ) where
 
 import Data.Time.Clock as Clock
@@ -14,3 +15,9 @@ getCurrentDate = do
   now <- Clock.getCurrentTime
   let t @ (year, month, day) = Calendar.toGregorian $ Clock.utctDay now
   return t
+
+getSimpleDate :: IO String
+getSimpleDate = do
+  now <- Clock.getCurrentTime
+  let simpleDate = Clock.utctDay now
+  return $ show $ simpleDate
