@@ -60,7 +60,7 @@ collection :: IO Text
 collection = do
   value <- Config.getValue "database.usersCollection"
   let value' = M.fromJust value
-  return (Text.pack value')
+  return $ Text.pack value'
 
 getID :: User -> ID
 getID = _id
@@ -110,7 +110,7 @@ newUser name email location interests = do
   DB.close pipe
 
   let user = newUserData _id name email location interests
-  return (user)
+  return $ user
 
 deleteUser :: ID -> IO ()
 deleteUser _id = do
