@@ -18,4 +18,4 @@ getValue key = do
   let filePath = currDir ++ appConfigFile
   configFile <- TConfig.readConfig filePath
   let value = TConfig.getValue key configFile
-  return (value)
+  return $ value
