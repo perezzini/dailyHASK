@@ -59,6 +59,7 @@ library
       Html
       Json
       News
+      Weather
       Utils
   other-modules:
       Paths_dailyHASK
@@ -72,8 +73,11 @@ executable dailyHASK-exe
   build-depends:
       base >=4.7 && <5
     , dailyHASK
-    , time
     , cron
+    , text
+    , bson
+    , time
+    , HaskellNet-SSL
   other-modules:
       Paths_dailyHASK
   default-language: Haskell2010
