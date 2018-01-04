@@ -88,7 +88,7 @@ newUserData id name email location interests = User {
 }
 
 newUser :: Name -> Mail.Address -> Location.GeoLoc -> [Interest] -> IO (Maybe User)
-newUser name email location interests = case Mail.isValidEmail email of
+newUser name email location interests = case Mail.isAddressValid email of
   True -> do
     let firstName = getFirstName name
     let lastName = getLastName name
