@@ -10,11 +10,13 @@ module Mail
     , closeConnection
     , auth
     , send
+    , isAddressValid
     ) where
 
 import Data.Text as Text
 import qualified Data.Text.Lazy as L
 import Data.Maybe as M
+import Text.Html.Email.Validate as EValidate
 
 import Config
 import Error as E
@@ -29,6 +31,9 @@ stringToAddress = Text.pack
 
 addressToString :: Address -> String
 addressToString = Text.unpack
+
+isAddressValid :: Address -> Bool
+isAddressValid address = EValidate.isValidEmail address
 
 smtpHostname :: IO String
 smtpHostname = do
