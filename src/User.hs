@@ -23,6 +23,7 @@ import Location
 import Database as DB
 import Config
 import Mail
+import Error as E
 
 import Data.Bson as Bson
 import qualified Data.Maybe as M
@@ -86,31 +87,33 @@ newUserData id name email location interests = User {
   , interests = interests
 }
 
-newUser :: Name -> Mail.Address -> Location.GeoLoc -> [Interest] -> IO User
-newUser name email location interests = do
-  let firstName = getFirstName name
-  let lastName = getLastName name
-  let locationAddress = Location.getAddress location
-  let locationLat = Location.getLat location
-  let locationLong = Location.getLong location
+newUser :: Name -> Mail.Address -> Location.GeoLoc -> [Interest] -> IO (Maybe User)
+newUser name email location interests = case Mail.isValidEmail email of
+  True -> do
+    let firstName = getFirstName name
+    let lastName = getLastName name
+    let locationAddress = Location.getAddress location
+    let locationLat = Location.getLat location
+    let locationLong = Location.getLong location
 
-  let namePost = ["first" =: firstName
-                  , "last" =: lastName] :: Bson.Document
-  let locationPost = ["address" =: locationAddress
-                      , "lat" =: locationLat
-                      , "long" =: locationLong] :: Bson.Document
-  let post = ["name" =: namePost
-              , "email" =: email
-              , "location" =: locationPost
-              , "interests" =: interests] :: Bson.Document
+    let namePost = ["first" =: firstName
+                    , "last" =: lastName] :: Bson.Document
+    let locationPost = ["address" =: locationAddress
+                        , "lat" =: locationLat
+                        , "long" =: locationLong] :: Bson.Document
+    let post = ["name" =: namePost
+                , "email" =: email
+                , "location" =: locationPost
+                , "interests" =: interests] :: Bson.Document
 
-  collection <- collection
-  pipe <- DB.open
-  _id <- DB.insert pipe collection post
-  DB.close pipe
+    collection <- collection
+    pipe <- DB.open
+    _id <- DB.insert pipe collection post
+    DB.close pipe
 
-  let user = newUserData _id name email location interests
-  return $ user
+    let user = newUserData _id name email location interests
+    return $ Just user
+  otherwise -> return $ Nothing
 
 deleteUser :: ID -> IO ()
 deleteUser _id = do
