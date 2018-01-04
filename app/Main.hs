@@ -94,7 +94,6 @@ doWork = let
     work users conn
     Mail.closeConnection conn
     putStrLn "doWork finished."
-    threadDelay 10000000 -- Scaffolding...
 
 main :: IO ()
 main = do
@@ -108,6 +107,5 @@ main = do
     else forever $ do
       now <- getCurrentTime
       when (scheduleMatches schedule now) doWork
-      doWork
     where
       schedule = Cron.daily
