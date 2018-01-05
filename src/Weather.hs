@@ -7,6 +7,7 @@ module Weather
     , getPressure
     , getHumidity
     , getCurrentWeatherFromGeoLoc
+    , kelvinToCelsius
     ) where
 
 import Config
@@ -82,12 +83,17 @@ getCurrentWeatherFromGeoLoc geoLoc = do
   key <- key
   let lat = Text.pack $ show $ Location.getLat geoLoc
   let long = Text.pack $ show $ Location.getLong geoLoc
+  putStrLn "Inside getCurrentWeatherFromGeoLoc 1"
   let opts = defaults & param "APPID" .~ [key]
             & param "lat" .~ [lat]
             & param "lon" .~ [long]
   req <- getWith opts (Text.unpack endpoint)
+  putStrLn "Inside getCurrentWeatherFromGeoLoc 2"
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^? responseBody . Lens.key "cod" . Lens._Integer
   if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing
+
+kelvinToCelsius :: Double -> Double
+kelvinToCelsius k = k - 273.5
