@@ -1,3 +1,3 @@
 # Changelog for dailyHASK
 
-## Unreleased changes
+## Unreleased changes: Lib in the works

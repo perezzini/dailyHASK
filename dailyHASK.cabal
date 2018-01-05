@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7558e8fbb5dec851f5f5b40b51dfdd44b4fd9fd420eb528441b359fcb545c5df
+-- hash: e3558e33b3e0c5c5eafd67461d3e6502aba5d77b5ecda5f69b756e5a16995875
 
 name:           dailyHASK
 version:        0.1.0.0
@@ -31,8 +31,36 @@ library
       src
   build-depends:
       base >=4.7 && <5
+      , time
+      , directory
+      , tconfig
+      , text
+      , mongoDB
+      , bson
+      , containers
+      , aeson
+      , lens
+      , wreq
+      , lens-aeson
+      , vector
+      , HaskellNet-SSL
+      , blaze-html
+      , html-email-validate
   exposed-modules:
-      Lib
+      Error
+      Date
+      Interest
+      Location
+      User
+      Config
+      Database
+      Url
+      Mail
+      Html
+      Json
+      News
+      Weather
+      Utils
   other-modules:
       Paths_dailyHASK
   default-language: Haskell2010
@@ -45,6 +73,10 @@ executable dailyHASK-exe
   build-depends:
       base >=4.7 && <5
     , dailyHASK
+    , text
+    , bson
+    , cron
+    , HaskellNet-SSL
   other-modules:
       Paths_dailyHASK
   default-language: Haskell2010
