@@ -1,23 +1,21 @@
 module Date
     (
-    Date
-    , getCurrentDate
-    , getSimpleDate
+    today
+    , getCurrentTimeFromServer
     ) where
 
-import Data.Time.Clock as Clock
-import Data.Time.Calendar as Calendar
+import Data.Time.Clock
+import Data.Time.Calendar
+import Data.Time.LocalTime
 
-type Date = (Integer, Int, Int)
+getCurrentTimeFromServer :: IO UTCTime
+getCurrentTimeFromServer = do
+  tz <- getCurrentTimeZone
+  now @ (UTCTime day _) <- getCurrentTime
+  let localDiffTime = timeOfDayToTime $ localTimeOfDay $ utcToLocalTime tz now :: DiffTime
+  return $ UTCTime day localDiffTime
 
-getCurrentDate :: IO Date
-getCurrentDate = do
-  now <- Clock.getCurrentTime
-  let t @ (year, month, day) = Calendar.toGregorian $ Clock.utctDay now
-  return t
-
-getSimpleDate :: IO String
-getSimpleDate = do
-  now <- Clock.getCurrentTime
-  let simpleDate = Clock.utctDay now
-  return $ show $ simpleDate
+today :: IO String
+today = do
+  UTCTime day _ <- getCurrentTime
+  return $ show $ day
