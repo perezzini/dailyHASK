@@ -140,9 +140,8 @@ main' h m = do
   if line == "Y" || line == "y"
     then main' h m
     else forever $ do
-      -- now <- Date.getCurrentTimeFromServer
-      -- when (scheduleMatches schedule now) doWork
-      doWork
+      now <- Date.getCurrentTimeFromServer
+      when (scheduleMatches schedule now) doWork
       threadDelay 60000000 -- delay 1 minute to skip schedule
     where
       cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
