@@ -4,6 +4,7 @@ module User
     (
     User(..)
     , Name(..)
+    , ID
     , newName
     , getID
     , getName
