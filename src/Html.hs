@@ -20,7 +20,7 @@ import User
 import Location
 import Interest
 import News
--- import Weather
+import Weather
 import Utils
 
 userInfoToHtml :: User -> Html
@@ -62,17 +62,17 @@ articleToHtml article = let
       h3 $ toHtml $ description
       p $ toHtml $ url
 
--- currentWeatherToHtml :: Weather -> Html
--- currentWeatherToHtml weather = let
---   temp = show $ Weather.getTemp weather
---   pressure = show $ Weather.getPressure weather
---   humidity = show $ Weather.getHumidity weather
---   in H.div $ do
---     h4 "The current weather: "
---     ul $ do
---       li $ toHtml $ "Temperature: " ++ temp
---       li $ toHtml $ "Pressure: " ++ pressure
---       li $ toHtml $ "Humidity: " ++ humidity
+currentWeatherToHtml :: Weather -> Html
+currentWeatherToHtml weather = let
+  (temp, pressure, humidity) = (show $ Weather.kelvinToCelsius $ Weather.getTemp weather
+                                , show $ Weather.getPressure weather
+                                , show $ Weather.getHumidity weather)
+  in H.div $ do
+    h4 "The current weather: "
+    ul $ do
+      li $ toHtml $ "Temperature: " ++ temp
+      li $ toHtml $ "Pressure: " ++ pressure
+      li $ toHtml $ "Humidity: " ++ humidity
 
 welcomeMailTemplate :: User -> Html
 welcomeMailTemplate user = docTypeHtml $ do
@@ -84,12 +84,14 @@ welcomeMailTemplate user = docTypeHtml $ do
 renderWelcomeMailTemplate :: User -> String
 renderWelcomeMailTemplate user = renderHtml $ welcomeMailTemplate user
 
-dailyMailTemplate :: News -> Html
-dailyMailTemplate news = let
+dailyMailTemplate :: User -> News -> Weather -> Html
+dailyMailTemplate user news weather = let
   total = News.getNewsTotal news
   totalStr = show total :: String
-  totalHeader = "Total articles: " ++ totalStr
+  totalHeader = "total articles: " ++ totalStr
   articles = News.getNewsArticles news
+
+  userFirstName = Text.unpack $ User.getFirstName $ User.getName user
   in if total == 0
     then H.div $ do
       h3 "Application couldn't retrieve news articles matching your interests today."
@@ -97,9 +99,10 @@ dailyMailTemplate news = let
       H.head $ do
         H.title "dailyHASK"
       body $ do
-        h2 "The following news articles match your interests and were published today"
-        h3 $ toHtml $ totalHeader
+        h2 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today (" ++ totalHeader ++ ")"
+        -- h3 $ toHtml $ totalHeader
+        currentWeatherToHtml weather
         ul $ forM_ articles (li . articleToHtml)
 
-renderDailyMailTemplate :: News -> String
-renderDailyMailTemplate news = renderHtml $ dailyMailTemplate news
+renderDailyMailTemplate :: User -> News -> Weather -> String
+renderDailyMailTemplate user news weather = renderHtml $ dailyMailTemplate user news weather
