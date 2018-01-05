@@ -117,7 +117,7 @@ getNews :: [Interest] -> IO (Maybe News)
 getNews interests = do
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
-  today <- Date.getSimpleDate
+  today <- Date.today
   let today' = Text.pack today
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
   let opts = defaults & param "apiKey" .~ [key]
