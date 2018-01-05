@@ -122,7 +122,7 @@ getNews interests = do
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
   let opts = defaults & param "apiKey" .~ [key]
           & param "q" .~ [interests']
-          & param "sortBy" .~ ["popularity"]
+          & param "sortBy" .~ ["publishedAt"]
           & param "language" .~ ["en"]
           & param "from" .~ [today']
   req <- getWith opts (Text.unpack endpoint)
