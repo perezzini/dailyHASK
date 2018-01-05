@@ -32,7 +32,6 @@ library
   build-depends:
       base >=4.7 && <5
       , time
-      , either
       , directory
       , tconfig
       , text
@@ -46,6 +45,7 @@ library
       , vector
       , HaskellNet-SSL
       , blaze-html
+      , html-email-validate
   exposed-modules:
       Error
       Date
@@ -73,10 +73,9 @@ executable dailyHASK-exe
   build-depends:
       base >=4.7 && <5
     , dailyHASK
-    , cron
     , text
     , bson
-    , time
+    , cron
     , HaskellNet-SSL
   other-modules:
       Paths_dailyHASK
