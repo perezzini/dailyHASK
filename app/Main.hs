@@ -6,14 +6,15 @@ import Prelude hiding (last)
 
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever, when)
-import Data.Time.Clock (getCurrentTime)
-import System.Cron as Cron (daily, scheduleMatches)
+import System.Cron
+import System.Cron.Parser
 
 import Data.Maybe as M
 import Data.Text as Text hiding (words, unword, map)
 import qualified Data.Bson as Bson
 import Network.HaskellNet.SMTP.SSL as SMTP
 
+import Date
 import User
 import Interest
 import Mail
@@ -34,7 +35,7 @@ createNewGeoLoc address = do
 
 createNewUser :: IO User
 createNewUser = do
-  putStrLn "** NEW USER **"
+  putStrLn "\n.::. NEW USER .::.\n"
   putStrLn "> First Name:"
   userFirstName <- getLine
   putStrLn "> Last Name:"
@@ -46,11 +47,15 @@ createNewUser = do
   putStrLn "> User's location (e.g: 'rosario, santa fe, argentina'):"
   userLocationAddress <- getLine
   userGeoLoc <- createNewGeoLoc userLocationAddress
-  putStrLn "Interests (keywords separated by a space):"
+  putStrLn "> Interests (keywords separated by a space):"
   userInterestsString <- getLine
   let userInterests = Interest.toDataType $ words userInterestsString
   newUser <- User.newUser userName userEmail' userGeoLoc userInterests
-  return $ newUser
+  if M.isNothing newUser
+    then do
+      putStrLn "Error: Email address not valid. User not uploaded to DB. Create new user again, please.\n"
+      createNewUser
+    else return $ M.fromJust newUser
 
 sendWelcomeMailToUser :: User -> IO ()
 sendWelcomeMailToUser user = do
@@ -97,15 +102,29 @@ doWork = let
 
 main :: IO ()
 main = do
-  putStrLn ".::. Welcome to dailyHASK .::."
+  putStrLn ">> Select hour parameter to construct a cronjob"
+  h <- getLine
+  putStrLn ">> Select minute parameter to construct a cronjob"
+  m <- getLine
+  main' h m
+
+main' :: String -> String -> IO ()
+main' h m = do
   newUser <- createNewUser
   sendWelcomeMailToUser newUser
-  putStrLn "Want to create another user? [Y/N]"
+  putStrLn "> Want to create another user? [Y/N]"
   line <- getLine
   if line == "Y" || line == "y"
-    then main
+    then main' h m
     else forever $ do
-      now <- getCurrentTime
+      now <- Date.getCurrentTimeFromServer
       when (scheduleMatches schedule now) doWork
+      threadDelay 60000000 -- delay 1 minute to skip schedule
+      -- doWork
     where
-      schedule = Cron.daily
+      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
+      schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
+
+test = do
+  now <- Date.getCurrentTimeFromServer
+  return $ show $ now
