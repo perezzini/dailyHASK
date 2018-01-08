@@ -1,3 +1,10 @@
+{-|
+Module      : Location
+
+Definition of 'GeoLoc' data type along multiple functions concerning 'GeoLoc' values. Defines
+-- a GET request to retrieve geographic location from Google Maps API services
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Location
@@ -17,7 +24,7 @@ module Location
 import Config
 import Url
 import Utils
-import Json
+import Http
 import Error as E
 
 import Data.Aeson
@@ -50,18 +57,23 @@ instance FromJSON GeoLoc where
     long <- location .: "lng"
     return (GeoLoc address lat long)
 
+-- |The 'getAddress' function takes a 'GeoLoc' value and extracts the address value from it
 getAddress :: GeoLoc -> Address
 getAddress = address
 
+-- |The 'getLat' function extracts 'lat' value from a 'GeoLoc' value
 getLat :: GeoLoc -> Latitude
 getLat = lat
 
+-- |The 'getLong' function extracst 'long' value from a 'GeoLoc' value
 getLong :: GeoLoc -> Longitude
 getLong = long
 
+-- |The 'stringToAddress' function maps a string to an 'Address' value
 stringToAddress :: String -> Address
 stringToAddress = Text.pack
 
+-- |The 'addressToString' function maps an 'Address' value to a string
 addressToString :: Address -> String
 addressToString = Text.unpack
 
@@ -84,8 +96,12 @@ apiRequestOk t = if t == "OK" || t == "ok"
   then True
   else False
 
+-- |The 'getGeoLocFromString' takes a string geographic location address and makes a
+-- GET request to Google Maps API services to retrieve 'lat' and 'long'.
+-- It returns 'Nothing' in case the request fails
 getGeoLocFromString :: String -> IO (Maybe GeoLoc)
 getGeoLocFromString address = do
+  putStrLn "Start of GET request from locations API..."
   endpoint <- endpoint
   key <- key
   let address' = Text.pack $ Utils.replaceCharByCharInString ' ' '+' address
@@ -93,6 +109,7 @@ getGeoLocFromString address = do
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
-  if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
+  putStrLn "End of GET request from locations API"
+  if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing

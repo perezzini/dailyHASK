@@ -1,3 +1,9 @@
+{-|
+Module      : Config
+
+Definition of functions to get values of certain keys form a configuration file named app.cfg placed in root folder
+-}
+
 module Config
     (
     getValue
@@ -12,6 +18,7 @@ import qualified Error as E
 appConfigFile :: String
 appConfigFile = "/app.cfg"
 
+-- |The 'getValue' function gets a value from a given key stored in /app.cfg
 getValue :: String -> IO (Maybe String)
 getValue key = do
   currDir <- Dir.getCurrentDirectory

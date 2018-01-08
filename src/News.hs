@@ -1,3 +1,12 @@
+{-|
+Module      : News
+
+Definition of 'News' and 'Articles' data types along multiple functions to handle them.
+Defines a GET request to retrieve news from NewsApi.org services that match multiple interests
+and were published today at some time
+-}
+
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module News
@@ -18,7 +27,7 @@ module News
 
 import Config
 import Interest
-import Json
+import Http
 import Url
 import Date
 import Utils
@@ -65,30 +74,46 @@ instance FromJSON News where
     articles <- v .: "articles"
     return (News total articles)
 
+-- |The 'getNewsTotal' function takes a 'News' value and returns the 'total' value from it
 getNewsTotal :: News -> Int
 getNewsTotal = total
 
+-- |The 'getNewsArticles' function takes a 'News' value and returns the 'articles' value from it
 getNewsArticles :: News -> [Article]
 getNewsArticles = articles
 
+-- |The 'getArticleSourceName' function takes an 'Article' value and maybe returns it's source name. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleSourceName :: Article -> Maybe Text
 getArticleSourceName = sourceName
 
+-- |The 'getArticleAuthor' function takes an 'Article' value and maybe returns it's author. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleAuthor :: Article -> Maybe Text
 getArticleAuthor = author
 
+-- |The 'getArticleTitle' function takes an 'Article' value and maybe returns it's title. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleTitle :: Article -> Maybe Text
 getArticleTitle = title
 
+-- |The 'getArticleDescripton' function takes an 'Article' value and maybe returns it's description. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleDescripton :: Article -> Maybe Text
 getArticleDescripton = description
 
+-- |The 'getArticleUrl' function takes an 'Article' value and returns the URL pointing to the corresponding article. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleUrl :: Article -> Url
 getArticleUrl = url
 
+-- |The 'getArticleUrlToImage' function takes an 'Article' value and maybe returns it's image URL. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticleUrlToImage :: Article -> Maybe Url
 getArticleUrlToImage = urlToImage
 
+-- |The 'getArticlePublishedAt' function takes an 'Article' value and maybe returns the date-time it was published. It
+-- returns 'Nothing' in case of the value is JSON null.
 getArticlePublishedAt :: Article -> Maybe Text
 getArticlePublishedAt = publishedAt
 
@@ -113,8 +138,11 @@ apiRequestOk t = if t == "OK" || t == "ok"
   then True
   else False
 
+-- |The 'getNews' function takes a list of interests and returns: a value of type 'News' mathing these interests,
+-- or 'Nothing' in case the GET request to NewsApi.org fails. The news are from today and sorted by popularity
 getNews :: [Interest] -> IO (Maybe News)
 getNews interests = do
+  putStrLn "Start of GET request from news API..."
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
   today <- Date.today
@@ -122,12 +150,13 @@ getNews interests = do
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
   let opts = defaults & param "apiKey" .~ [key]
           & param "q" .~ [interests']
-          & param "sortBy" .~ ["publishedAt"]
+          & param "sortBy" .~ ["popularity"]
           & param "language" .~ ["en"]
           & param "from" .~ [today']
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
-  if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
+  putStrLn "End of GET request from news API"
+  if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing
