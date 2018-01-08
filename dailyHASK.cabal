@@ -57,7 +57,7 @@ library
       Url
       Mail
       Html
-      Json
+      Http
       News
       Weather
       Utils
