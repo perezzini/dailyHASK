@@ -62,7 +62,9 @@ sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
   conn <- Mail.connect
   Mail.auth conn
+  putStrLn "Sending welcome email to user..."
   Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
+  putStrLn "Welcome email sent"
   Mail.closeConnection conn
   return ()
 
@@ -96,17 +98,15 @@ doWork = let
     let userRecord = User _id name' email location' interests :: User
 
     news <- News.getNews interests
-    putStrLn "News articles retrieved from API..."
     currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
-    putStrLn "Weather information retrieved from API..."
     if M.isNothing news || M.isNothing currentWeather
-      then E.callError "Error. Main: couldn't retrive news articles. Aborting..."
+      then E.callError "Error. Main: couldn't retrive news articles or weather information. Aborting..."
       else let
         news' = M.fromJust news
         currentWeather' = M.fromJust currentWeather
         in do
-          Mail.send conn email "Your dailyHASK" "plain text body" (Html.renderDailyMailTemplate userRecord news' currentWeather')
-          putStrLn "Daily mail sent to user/s..."
+          Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
+          putStrLn "Daily mail sent to user..."
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
   work users conn = do
@@ -125,9 +125,9 @@ doWork = let
 
 main :: IO ()
 main = do
-  putStrLn ">> Select hour parameter to construct a cronjob"
+  putStrLn ">> Select hour parameter to construct cronjob"
   h <- getLine
-  putStrLn ">> Select minute parameter to construct a cronjob"
+  putStrLn ">> Select minute parameter to construct cronjob"
   m <- getLine
   main' h m
 
@@ -142,7 +142,7 @@ main' h m = do
     else forever $ do
       now <- Date.getCurrentTimeFromServer
       when (scheduleMatches schedule now) doWork
-      threadDelay 60000000 -- delay 1 minute to skip schedule
+      threadDelay 60000000 -- delay 1 minute to skip schedule. TODO: find a much simpler way to delay, i.e: using criterion package
     where
       cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
       schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
