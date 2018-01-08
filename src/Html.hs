@@ -53,26 +53,23 @@ articleToHtml article = let
   author = handleNull article News.getArticleAuthor
   title = handleNull article News.getArticleTitle
   description = handleNull article News.getArticleDescripton
-  url = News.getArticleUrl article
+  url = fromString $ Text.unpack $ News.getArticleUrl article :: AttributeValue
   urlToImage = handleNull article News.getArticleUrlToImage
   publishedAt = handleNull article News.getArticlePublishedAt
   in H.div $ do
     H.article $ do
-      h2 $ toHtml $ title
-      h3 $ toHtml $ description
-      p $ toHtml $ url
+      h3 $ a ! href url $ toHtml title
+      h5 $ toHtml $ sourceName
+      h4 $ toHtml $ description
 
 currentWeatherToHtml :: Weather -> Html
 currentWeatherToHtml weather = let
-  (temp, pressure, humidity) = (show $ Weather.kelvinToCelsius $ Weather.getTemp weather
+  (temp, pressure, humidity) = (show $ round $ Weather.kelvinToCelsius $ Weather.getTemp weather
                                 , show $ Weather.getPressure weather
                                 , show $ Weather.getHumidity weather)
   in H.div $ do
-    h4 "The current weather: "
-    ul $ do
-      li $ toHtml $ "Temperature: " ++ temp
-      li $ toHtml $ "Pressure: " ++ pressure
-      li $ toHtml $ "Humidity: " ++ humidity
+    h2 "The current weather: "
+    h3 $ toHtml $ "Temperature: " ++ temp ++ " °C; " ++ "pressure: " ++ pressure ++ " hPa; " ++ "humidity: " ++ humidity ++ " %"
 
 welcomeMailTemplate :: User -> Html
 welcomeMailTemplate user = docTypeHtml $ do
