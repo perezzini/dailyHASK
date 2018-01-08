@@ -1,4 +1,10 @@
-{-# LANGUAGE OverloadedStrings, ExistentialQuantification #-}
+{-|
+Module      : Html
+
+Definition of functions to render HTML output code
+-}
+
+{-# LANGUAGE OverloadedStrings #-}
 
 module Html
     (
@@ -15,6 +21,7 @@ import Text.Blaze.Html.Renderer.String
 
 import Control.Monad (forM_)
 import Data.Text as Text hiding (unwords)
+import Data.String
 
 import User
 import Location
@@ -78,6 +85,7 @@ welcomeMailTemplate user = docTypeHtml $ do
   body $ do
     userInfoToHtml user
 
+-- |The 'renderWelcomeMailTemplate' returns a string containing HTML code corresponding to a welcome-mail template
 renderWelcomeMailTemplate :: User -> String
 renderWelcomeMailTemplate user = renderHtml $ welcomeMailTemplate user
 
@@ -96,10 +104,10 @@ dailyMailTemplate user news weather = let
       H.head $ do
         H.title "dailyHASK"
       body $ do
-        h2 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today (" ++ totalHeader ++ ")"
-        -- h3 $ toHtml $ totalHeader
         currentWeatherToHtml weather
+        h2 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today (" ++ totalHeader ++ ")"
         ul $ forM_ articles (li . articleToHtml)
 
+-- |The 'renderDailyMailTemplate' returns a string containing HTML code corresponding to the daily-mail template
 renderDailyMailTemplate :: User -> News -> Weather -> String
 renderDailyMailTemplate user news weather = renderHtml $ dailyMailTemplate user news weather
