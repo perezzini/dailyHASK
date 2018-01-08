@@ -20,7 +20,7 @@ import Interest
 import Mail
 import News
 import Location
--- import Weather
+import Weather
 import Html
 import Database as DB
 import Error as E
@@ -62,7 +62,9 @@ sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
   conn <- Mail.connect
   Mail.auth conn
+  putStrLn "Sending welcome email to user..."
   Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
+  putStrLn "Welcome email sent"
   Mail.closeConnection conn
   return ()
 
@@ -76,20 +78,41 @@ doWork :: IO ()
 doWork = let
   workActions :: SMTPConnection -> Bson.Document -> IO ()
   workActions conn user = do
-    let email = Bson.typed $ Bson.valueAt "email" user :: Text
+    let _id = M.fromJust $ Bson.lookup "_id" user :: User.ID
+
+    let name = M.fromJust $ Bson.lookup "name" user :: Bson.Document
+    let firstName = M.fromJust $ Bson.lookup "first" name :: Text
+    let lastName = M.fromJust $ Bson.lookup "last" name :: Text
+    let name' = Name firstName lastName :: User.Name
+
+    let email = M.fromJust $ Bson.lookup "email" user :: Text
+
+    let location = M.fromJust $ Bson.lookup "location" user :: Bson.Document
+    let address = M.fromJust $ Bson.lookup "address" location :: Text
+    let lat = M.fromJust $ Bson.lookup "lat" location :: Double
+    let long = M.fromJust $ Bson.lookup "long" location :: Double
+    let location' = GeoLoc address lat long :: GeoLoc
+
     let interests = Bson.typed $ Bson.valueAt "interests" user :: [Interest]
+
+    let userRecord = User _id name' email location' interests :: User
+
     news <- News.getNews interests
-    if M.isNothing news
-      then E.callError "Error. Main: couldn't retrive news articles. Aborting..."
+    currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
+    if M.isNothing news || M.isNothing currentWeather
+      then E.callError "Error. Main: couldn't retrive news articles or weather information. Aborting..."
       else let
         news' = M.fromJust news
-        in Mail.send conn email "Your dailyHASK" "plain text body" (Html.renderDailyMailTemplate news')
+        currentWeather' = M.fromJust currentWeather
+        in do
+          Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
+          putStrLn "Daily mail sent to user..."
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
   work users conn = do
     mapM_ (workActions conn) users
   in do
-    putStrLn "doWork started..."
+    putStrLn "Processing database..."
     collection <- collection
     pipe <- DB.open
     users <- DB.findAll pipe [] collection
@@ -98,13 +121,13 @@ doWork = let
     Mail.auth conn
     work users conn
     Mail.closeConnection conn
-    putStrLn "doWork finished."
+    putStrLn "Process finished."
 
 main :: IO ()
 main = do
-  putStrLn ">> Select hour parameter to construct a cronjob"
+  putStrLn ">> Select hour parameter to construct cronjob"
   h <- getLine
-  putStrLn ">> Select minute parameter to construct a cronjob"
+  putStrLn ">> Select minute parameter to construct cronjob"
   m <- getLine
   main' h m
 
@@ -119,12 +142,7 @@ main' h m = do
     else forever $ do
       now <- Date.getCurrentTimeFromServer
       when (scheduleMatches schedule now) doWork
-      threadDelay 60000000 -- delay 1 minute to skip schedule
-      -- doWork
+      threadDelay 60000000 -- delay 1 minute to skip schedule. TODO: find a much simpler way to delay, i.e: using criterion package
     where
       cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
       schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
-
-test = do
-  now <- Date.getCurrentTimeFromServer
-  return $ show $ now

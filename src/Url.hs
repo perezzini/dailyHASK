@@ -1,3 +1,10 @@
+{-|
+Module      : Url
+
+Definition of the Url type
+-}
+
+
 module Url
     (
     Url
@@ -6,7 +13,3 @@ module Url
 import Data.Text as Text
 
 type Url = Text
-
-encode = undefined
-
-decode = undefined

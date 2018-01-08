@@ -1,3 +1,9 @@
+{-|
+Module      : Weather
+
+Definition of 'Weather' data type. Retrieves current weather information from Open Weather Map API
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Weather
@@ -7,13 +13,14 @@ module Weather
     , getPressure
     , getHumidity
     , getCurrentWeatherFromGeoLoc
+    , kelvinToCelsius
     ) where
 
 import Config
 import Url
 import Location
 import Utils
-import Json
+import Http
 import Error as E
 
 import Data.Text as Text
@@ -38,23 +45,17 @@ instance FromJSON Weather where
     humidity <- main .: "humidity"
     return (Weather temp pressure humidity)
 
+-- |The 'getTemp' function takes a 'Weather' value and returns its 'temp'
 getTemp :: Weather -> Double
 getTemp = temp
 
+-- |The 'getPressure' function takes a 'Weather' value and returns its 'pressure'
 getPressure :: Weather -> Int
 getPressure = pressure
 
+-- |The 'getHumidity' function takes a 'Weather' value and returns its 'humidity'
 getHumidity :: Weather -> Int
 getHumidity = humidity
-
--- getWindSpeed :: Weather -> Double
--- getWindSpeed = windSpeed
---
--- getRain :: Weather -> Int
--- getRain = rain
---
--- getSnow :: Weather -> Int
--- getSnow = snow
 
 endpoint :: IO Url
 endpoint = do
@@ -76,18 +77,26 @@ apiRequestOk (Just n) = if n == 200
   else False
 apiRequestOk _ = False
 
+-- |The 'getCurrentWeatherFromGeoLoc' takes a geographic location and returns its current weather using
+-- the Open Weather Map API using latitude and longitude from corresponding location
 getCurrentWeatherFromGeoLoc :: Location.GeoLoc -> IO (Maybe Weather)
 getCurrentWeatherFromGeoLoc geoLoc = do
+  putStrLn "Start of GET request from weather API..."
   endpoint <- endpoint
   key <- key
   let lat = Text.pack $ show $ Location.getLat geoLoc
   let long = Text.pack $ show $ Location.getLong geoLoc
-  let opts = defaults & param "APPID" .~ [key]
+  let opts = defaults & param "appid" .~ [key]
             & param "lat" .~ [lat]
             & param "lon" .~ [long]
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^? responseBody . Lens.key "cod" . Lens._Integer
-  if Json.httpRequestOk headerStatusCode && apiRequestOk apiStatus
+  putStrLn "End of GET request from weather API"
+  if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing
+
+-- |The 'kelvinToCelsius' function converts Kelvin to Celsius temperature
+kelvinToCelsius :: Double -> Double
+kelvinToCelsius k = k - 273.5
