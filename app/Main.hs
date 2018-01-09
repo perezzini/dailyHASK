@@ -142,7 +142,7 @@ main' h m = do
     else forever $ do
       now <- Date.getCurrentTimeFromServer
       when (scheduleMatches schedule now) doWork
-      threadDelay 60000000 -- delay 1 minute to skip schedule. TODO: find a much simpler way to delay, i.e: using criterion package
+      threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold 
     where
       cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
       schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
