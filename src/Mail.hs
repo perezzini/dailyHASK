@@ -14,6 +14,7 @@ module Mail
     , stringToAddress
     , addressToString
     , connect
+    , connectAndLogin
     , closeConnection
     , auth
     , send
@@ -74,12 +75,25 @@ smtpMailAddressAlias = do
     then E.callError "Error: smtp.mail.address.alias config value not found"
     else return $ M.fromJust value
 
--- |'connect' connects to an SMTP server using a SMTP hostname from a config file
+-- |'connect' connects to an SMTP SSL server using a SMTP hostname from the config file
 connect :: IO SMTPConnection
 connect = do
   hostname <- smtpHostname
   conn <- SMTP.connectSMTPSSL hostname
   return $ conn
+
+-- |'connectAndLogin' connects to an SMTP SSL server using a SMTP hostname, user name and password
+-- from the config file, and logs in.
+connectAndLogin :: IO SMTPConnection
+connectAndLogin = do
+  hostname <- smtpHostname
+  conn <- SMTP.connectSMTPSSL hostname
+  userName <- smtpUserName
+  userNamePassword <- smtpUserNamePassword
+  status <- SMTP.authenticate LOGIN userName userNamePassword conn
+  if not status
+    then E.callError "Mail. Auth denied. Aborting..."
+    else return $ conn
 
 -- |The 'closeConnection' function takes a SMTP connection and closes it
 closeConnection :: SMTPConnection -> IO ()
@@ -98,7 +112,7 @@ auth conn = do
 
 -- |The 'send' function takes a SMTP connetion, a receiver, a subject, a plain text body, a HTML body, and
 -- sends an e-mail
-send :: SMTPConnection -> Text -> Text -> Text -> String -> IO ()
+send :: SMTPConnection -> Address -> Subject -> Text -> String -> IO ()
 send conn receiver subject plainTextBody htmlBody = do
   let receiver' = Text.unpack receiver :: String
   senderAlias <- smtpMailAddressAlias
