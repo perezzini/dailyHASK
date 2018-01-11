@@ -60,8 +60,7 @@ createNewUser = do
 sendWelcomeMailToUser :: User -> IO ()
 sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
-  conn <- Mail.connect
-  Mail.auth conn
+  conn <- Mail.connectAndLogin
   putStrLn "Sending welcome email to user..."
   Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
   putStrLn "Welcome email sent"
@@ -110,6 +109,8 @@ doWork = let
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
   work users conn = do
+    -- mapM_: Map each element of a structure to a monadic action,
+    -- evaluate these actions from left to right, and ignore the results
     mapM_ (workActions conn) users
   in do
     putStrLn "Processing database..."
@@ -117,8 +118,7 @@ doWork = let
     pipe <- DB.open
     users <- DB.findAll pipe [] collection
     DB.close pipe
-    conn <- Mail.connect
-    Mail.auth conn
+    conn <- Mail.connectAndLogin
     work users conn
     Mail.closeConnection conn
     putStrLn "Process finished."
@@ -142,7 +142,7 @@ main' h m = do
     else forever $ do
       now <- Date.getCurrentTimeFromServer
       when (scheduleMatches schedule now) doWork
-      threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold 
+      threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold
     where
       cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
       schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
