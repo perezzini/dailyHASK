@@ -51,6 +51,10 @@ data Article = Article {
   , publishedAt :: Maybe Text
 } deriving (Show)
 
+-- Here is where we parse the GET request response object.
+-- We just want the following fields: "source" (and "name"
+-- from inside it), "author", "title", "description", "url",
+-- "urlToImage", and "publishedAt"
 instance FromJSON Article where
   parseJSON = withObject "Article" $ \v -> do
     sourceObject <- v .: "source"
@@ -68,6 +72,7 @@ data News = News {
   , articles :: [Article]
 } deriving (Show)
 
+-- Just retrieve the entire JSON object
 instance FromJSON News where
   parseJSON = withObject "News" $ \v -> do
     total <- v .: "totalResults"

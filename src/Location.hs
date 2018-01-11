@@ -46,6 +46,9 @@ data GeoLoc = GeoLoc {
   , long :: Longitude
 } deriving (Show)
 
+-- Here is where we parse the GET request response object.
+-- We just want the following fields: "formatted_address",
+-- "lat", and "lng"
 instance FromJSON GeoLoc where
   parseJSON = withObject "GeoLoc" $ \v -> do
     results <- v .: "results"

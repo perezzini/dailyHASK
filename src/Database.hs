@@ -48,16 +48,15 @@ db = do
     then E.callError "Error: database.db config file value not found"
     else return $ M.fromJust value
 
--- |The 'open' function returns a TCP connection to a database defined in the
--- /app.cfg file, a 'MongoDB.Pipe'
+-- |'open' returns a TCP connection to a database defined in the
+-- /app.cfg file
 open :: IO MongoDB.Pipe
 open = do
   server <- server
   pipe <- MongoDB.connect $ MongoDB.host server
   return $ pipe
 
--- |The 'close' function closes the TCP connection the database setted in the
--- config file /app.cfg
+-- |The 'close' function closes a TCP connection to the database opened with 'open'
 close :: MongoDB.Pipe -> IO ()
 close pipe = MongoDB.close pipe
 
