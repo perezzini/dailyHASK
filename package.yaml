@@ -4,20 +4,19 @@ github:              "perezzini/dailyHASK"
 license:             BSD3
 author:              "Luciano Perezzini"
 maintainer:          "lperezzini@dcc.fceia.unr.edu.ar"
-copyright:           "2017 Luciano Perezzini"
+copyright:           "2018 Luciano Perezzini"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
-synopsis:            A daily hot news articles delivery library, in Haskell
+synopsis:            A daily news articles e-mail delivery
 # category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on Github at <https://github.com/githubuser/dailyHASK#readme>
+description:         Please see the README on Github at <https://github.com/perezzini/dailyHASK#readme>
 
 dependencies:
 - base >= 4.7 && < 5
