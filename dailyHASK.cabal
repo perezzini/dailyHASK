@@ -19,7 +19,6 @@ build-type:     Simple
 cabal-version:  >= 1.10
 
 extra-source-files:
-    ChangeLog.md
     README.md
 
 source-repository head
