@@ -2,7 +2,7 @@
 A daily news articles e-mail delivery developed in Haskell.
 
 ## Description
-It's clear that the Web is formed by billions of documents of all kinds: from restaurant's reviews, social networks, news, etc. Then, given that the Web is enormous, the key here is to use applications that enable us to retrieve the information we're looking for in a simple way. There exist many of these, but it is on us to continue creating these kind of applications. This project aims this.
+It's clear that the Web is formed by billions of documents of all kinds: from restaurant's reviews, social networks, news, etc. Then, given that the Web is enormous, the key here is to use applications that enable us to retrieve the information we're looking for in a simple way. There exist many of these, but it is on us to continue creating these kind of applications. This project aims to be another of those apps.
 
 ## News and weather information
 When we read newspapers online, we are not usually interested in all the articles the newspaper wrote: we just are *really* intersted in a couple of them. So, we use read differents online blogs and newspapers to find those articles we are interested. Sort of the same happens when searching for weather information: many sources and, many times, inaccurate between them.
