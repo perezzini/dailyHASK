@@ -13,7 +13,10 @@ module News
     (
     News(..)
     , Article(..)
+    , Publisher(..)
+    , Sources(..)
     , getNews
+    , getSources
     , getNewsTotal
     , getNewsArticles
     , getArticleSourceName
@@ -23,6 +26,15 @@ module News
     , getArticleUrl
     , getArticleUrlToImage
     , getArticlePublishedAt
+    , getPublisherID
+    , getPublisherUrl
+    , getPublisherName
+    , getPublisherCountry
+    , getPublisherLanguage
+    , getPublisherCategory
+    , getPublisherDescription
+    , getTotalPublishers
+    , getPublishers
     ) where
 
 import Config
@@ -33,7 +45,7 @@ import Date
 import Utils
 import Error as E
 
-import Data.Text as Text
+import Data.Text as Text hiding (length)
 import Data.Maybe as M
 
 import Data.Aeson
@@ -79,6 +91,39 @@ instance FromJSON News where
     articles <- v .: "articles"
     return (News total articles)
 
+data Publisher = Publisher {
+  publisherID :: Text
+  , name :: Maybe Text
+  , sourceDescription :: Maybe Text
+  , sourceUrl :: Url
+  , category :: Maybe Text
+  , language :: Maybe Text
+  , country :: Maybe Text
+} deriving (Show)
+
+-- Just retrieve the entire JSON object
+instance FromJSON Publisher where
+  parseJSON = withObject "Publisher" $ \v -> do
+    id <- v .: "id"
+    name <- v .: "name"
+    description <- v .: "description"
+    url <- v .: "url"
+    category <- v .: "category"
+    language <- v .: "language"
+    country <- v .: "country"
+    return (Publisher id name description url category language country)
+
+data Sources = Sources {
+  publishers :: [Publisher]
+  , totalPublishers :: Int
+} deriving (Show)
+
+instance FromJSON Sources where
+  parseJSON = withObject "Sources" $ \v -> do
+    publishers <- v .: "sources"
+    let totalPublishers = length publishers
+    return (Sources publishers totalPublishers)
+
 -- |The 'getNewsTotal' function takes a 'News' value and returns the 'total' value from it
 getNewsTotal :: News -> Int
 getNewsTotal = total
@@ -87,22 +132,22 @@ getNewsTotal = total
 getNewsArticles :: News -> [Article]
 getNewsArticles = articles
 
--- |The 'getArticleSourceName' function takes an 'Article' value and maybe returns it's source name. It
+-- |The 'getArticleSourceName' function takes an 'Article' value and maybe returns its source name. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticleSourceName :: Article -> Maybe Text
 getArticleSourceName = sourceName
 
--- |The 'getArticleAuthor' function takes an 'Article' value and maybe returns it's author. It
+-- |The 'getArticleAuthor' function takes an 'Article' value and maybe returns its author. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticleAuthor :: Article -> Maybe Text
 getArticleAuthor = author
 
--- |The 'getArticleTitle' function takes an 'Article' value and maybe returns it's title. It
+-- |The 'getArticleTitle' function takes an 'Article' value and maybe returns its title. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticleTitle :: Article -> Maybe Text
 getArticleTitle = title
 
--- |The 'getArticleDescripton' function takes an 'Article' value and maybe returns it's description. It
+-- |The 'getArticleDescripton' function takes an 'Article' value and maybe returns its description. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticleDescripton :: Article -> Maybe Text
 getArticleDescripton = description
@@ -112,15 +157,56 @@ getArticleDescripton = description
 getArticleUrl :: Article -> Url
 getArticleUrl = url
 
--- |The 'getArticleUrlToImage' function takes an 'Article' value and maybe returns it's image URL. It
+-- |The 'getArticleUrlToImage' function takes an 'Article' value and maybe returns its image URL. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticleUrlToImage :: Article -> Maybe Url
 getArticleUrlToImage = urlToImage
 
--- |The 'getArticlePublishedAt' function takes an 'Article' value and maybe returns the date-time it was published. It
+-- |The 'getArticlePublishedAt' function takes a 'Article' value and maybe returns the date-time it was published. It
 -- returns 'Nothing' in case of the value is JSON null.
 getArticlePublishedAt :: Article -> Maybe Text
 getArticlePublishedAt = publishedAt
+
+-- |The 'getPublisherID' function takes a 'Publisher' value and returns its ID
+getPublisherID :: Publisher -> Text
+getPublisherID = publisherID
+
+-- |The 'getPublisherID' function takes a 'Publisher' value and maybe returns its ID. It
+-- returns 'Nothing' in case of the value is JSON null.
+getPublisherName :: Publisher -> Maybe Text
+getPublisherName = name
+
+-- |The 'getPublisherDescription' function takes a 'Publisher' value and maybe returns its description. It
+-- returns 'Nothing' in case of the value is JSON null.
+getPublisherDescription :: Publisher -> Maybe Text
+getPublisherDescription = sourceDescription
+
+-- |The 'getPublisherUrl' function takes a 'Publisher' value and returns its 'Url'
+getPublisherUrl :: Publisher -> Url
+getPublisherUrl = sourceUrl
+
+-- |The 'getPublisherCategory' function takes a 'Publisher' value and maybe returns its category. It
+-- returns 'Nothing' in case of the value is JSON null.
+getPublisherCategory :: Publisher -> Maybe Text
+getPublisherCategory = category
+
+-- |The 'getPublisherLanguage' function takes a 'Publisher' value and maybe returns its ID. It
+-- returns 'Nothing' in case of the value is JSON null.
+getPublisherLanguage :: Publisher -> Maybe Text
+getPublisherLanguage = language
+
+-- |The 'getPublisherCountry' function takes a 'Publisher' value and maybe returns the country where its from. It
+-- returns 'Nothing' in case of the value is JSON null.
+getPublisherCountry :: Publisher -> Maybe Text
+getPublisherCountry = country
+
+-- |The 'getPublishers' function takes 'Sources' and returns the entire list of publishers
+getPublishers :: Sources -> [Publisher]
+getPublishers = publishers
+
+-- |The 'getTotalPublishers' function takes 'Sources' and returns how many publishers there are
+getTotalPublishers :: Sources -> Int
+getTotalPublishers = totalPublishers
 
 endpoint :: String -> IO Url
 endpoint e = do
@@ -143,11 +229,13 @@ apiRequestOk t = if t == "OK" || t == "ok"
   then True
   else False
 
--- |The 'getNews' function takes a list of interests and returns: a value of type 'News' mathing these interests,
--- or 'Nothing' in case the GET request to NewsApi.org fails. The news are from today and sorted by popularity
-getNews :: [Interest] -> IO (Maybe News)
-getNews interests = do
-  putStrLn "Start of GET request from news API..."
+-- |The 'getNews' function takes a list of interests, a parameter about how to sort retrieved news, and wanted language.
+-- It returns a value of type 'News' mathing these interests, and specified language, or 'Nothing' in case the GET
+-- request to NewsAPI.org's API fails. The news are from today and sorted by specified parameter.
+-- Explore NewsAPI.org website for more information about the 'Everything' endpoint parameters
+getNews :: [Interest] -> Text -> Text -> IO (Maybe News)
+getNews interests sort lang = do
+  putStrLn "[getNews] Start of GET request from news API..."
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
   today <- Date.today
@@ -155,13 +243,33 @@ getNews interests = do
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
   let opts = defaults & param "apiKey" .~ [key]
           & param "q" .~ [interests']
-          & param "sortBy" .~ ["popularity"]
-          & param "language" .~ ["en"]
+          & param "sortBy" .~ [sort]
+          & param "language" .~ [lang]
           & param "from" .~ [today']
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
-  putStrLn "End of GET request from news API"
+  putStrLn "[getNews] End of GET request from news API"
+  if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
+    then return (decode $ req ^. responseBody)
+    else return $ Nothing
+
+-- |The 'getSources' function takes a specific category, language, and country, and maybe returns the corresponding
+-- sources making a GET request to NewsAPI.org's API. If this fails, it'll return 'Nothing'.
+-- Explore NewsAPI.org website for more information about the 'Sources' endpoint parameters
+getSources :: Text -> Text -> Text -> IO (Maybe Sources)
+getSources category language country = do
+  putStrLn "[getSources] Start of GET request from news API..."
+  endpoint <- endpoint "api.news.endpoint.sources"
+  key <- key
+  let opts = defaults & param "apiKey" .~ [key]
+          & param "category" .~ [category]
+          & param "language" .~ [language]
+          & param "country" .~ [country]
+  req <- getWith opts (Text.unpack endpoint)
+  let headerStatusCode = req ^. responseStatus . statusCode
+  let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
+  putStrLn "[getSources] End of GET request from news API"
   if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing
