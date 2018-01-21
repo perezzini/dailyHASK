@@ -12,6 +12,7 @@ module Weather
     , getTemp
     , getPressure
     , getHumidity
+    , getDescription
     , getCurrentWeatherFromGeoLoc
     , kelvinToCelsius
     ) where
@@ -25,6 +26,7 @@ import Error as E
 
 import Data.Text as Text
 import Data.Maybe as M
+import qualified Data.Vector as V
 
 import Data.Aeson
 import qualified Data.Aeson.Lens as Lens (key, _Integer)
@@ -35,15 +37,19 @@ data Weather = Weather {
   temp :: Double
   , pressure :: Int
   , humidity :: Int
+  , description :: Maybe Text
 } deriving (Show)
 
 instance FromJSON Weather where
   parseJSON = withObject "Weather" $ \v -> do
     main <- v .: "main"
+    weather <- v .: "weather"
+    let weatherObject = V.head weather
     temp <- main .: "temp"
     pressure <- main .: "pressure"
     humidity <- main .: "humidity"
-    return (Weather temp pressure humidity)
+    description <- weatherObject .: "description"
+    return (Weather temp pressure humidity description)
 
 -- |The 'getTemp' function takes a 'Weather' value and returns its 'temp'
 getTemp :: Weather -> Double
@@ -56,6 +62,10 @@ getPressure = pressure
 -- |The 'getHumidity' function takes a 'Weather' value and returns its 'humidity'
 getHumidity :: Weather -> Int
 getHumidity = humidity
+
+-- |The 'getHumidity' function takes a 'Weather' value and returns its 'description'
+getDescription :: Weather -> Maybe Text
+getDescription = description
 
 endpoint :: IO Url
 endpoint = do
