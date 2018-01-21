@@ -12,9 +12,12 @@ module Utils
     , connectListOfStrings
     , stringToInteger
     , handleNullValue
+    , isInt
     ) where
 
 import Data.Text as Text hiding (map)
+import Text.Read as Read
+import Data.Maybe as M
 
 -- |The 'listOfStringsToListOfText' function takes a list of strings and maps it to a list
 -- of 'Text'
@@ -46,3 +49,10 @@ stringToInteger s = read s
 handleNullValue :: Maybe a -> Either Text a
 handleNullValue (Just v) = Right v
 handleNullValue _ = Left $ Text.pack "Not available"
+
+isInt :: String -> Bool
+isInt s = let
+  s' = Read.readMaybe s :: Maybe Int
+  in if M.isNothing s'
+    then False
+    else True
