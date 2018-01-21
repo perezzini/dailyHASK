@@ -7,7 +7,6 @@ import Prelude hiding (last)
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever, when)
 import System.Cron
-import System.Cron.Parser
 
 import Data.Maybe as M
 import Data.Text as Text hiding (words, unword, map)
@@ -25,6 +24,8 @@ import Html
 import Database as DB
 import Error as E
 import Config
+import Schedule
+import Utils
 
 createNewGeoLoc :: String -> IO Location.GeoLoc
 createNewGeoLoc address = do
@@ -98,14 +99,16 @@ doWork = let
 
     news <- News.getNews interests "popularity" "en"
     currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
-    if M.isNothing news || M.isNothing currentWeather
-      then E.callError "Error. Main: couldn't retrive news articles or weather information. Aborting..."
-      else let
-        news' = M.fromJust news
-        currentWeather' = M.fromJust currentWeather
-        in do
-          Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
-          putStrLn "Daily mail sent to user..."
+    if M.isNothing news
+      then E.callError "Error. Main: couldn't retrieve news articles. Aborting..."
+      else if M.isNothing currentWeather
+        then  E.callError "Error. Main: couldn't retrieve weather information. Aborting..."
+        else let
+          news' = M.fromJust news
+          currentWeather' = M.fromJust currentWeather
+          in do
+            Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
+            putStrLn "Success: daily mail sent to user..."
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
   work users conn = do
@@ -129,7 +132,9 @@ main = do
   h <- getLine
   putStrLn ">> Select minute parameter to construct cronjob"
   m <- getLine
-  main' h m
+  if Utils.isInt h && Utils.isInt m
+    then main' h m
+    else E.callError "Error. Main: hour or minute parameter not Integer"
 
 main' :: String -> String -> IO ()
 main' h m = do
@@ -144,5 +149,7 @@ main' h m = do
       when (scheduleMatches schedule now) doWork
       threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold
     where
-      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
-      schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
+      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *") -- m h * * * * = "Everyday at h:m hours"
+      schedule = case Schedule.createScheduleFromText cronSpec of
+        Just s -> s
+        otherwise -> E.callError "Error at configuring cron schedule (it should not happen). Aborting..."
