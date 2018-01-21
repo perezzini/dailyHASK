@@ -103,7 +103,7 @@ findOne pipe fields collection = do
   exec <- run pipe $ MongoDB.findOne $ MongoDB.select fields collection
   return $ exec
 
--- |The 'findAll' function fetches all documents from a given collection.
+-- |The 'findAll' function fetches all documents from a given collection, that preserve some property
 findAll :: MongoDB.Pipe -> MongoDB.Selector -> MongoDB.Collection -> IO [Bson.Document]
 findAll pipe fields collection = do
   exec <- run pipe $ MongoDB.find (MongoDB.select fields collection) >>= MongoDB.rest
