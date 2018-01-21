@@ -7,7 +7,7 @@
 name:           dailyHASK
 version:        0.1.0.0
 synopsis:       A daily hot news articles delivery library, in Haskell
-description:    Please see the README on Github at <https://github.com/githubuser/dailyHASK#readme>
+description:    Please see the README on Github at <https://github.com/perezzini/dailyHASK#readme>
 homepage:       https://github.com/perezzini/dailyHASK#readme
 bug-reports:    https://github.com/perezzini/dailyHASK/issues
 author:         Luciano Perezzini
@@ -45,6 +45,7 @@ library
       , HaskellNet-SSL
       , blaze-html
       , html-email-validate
+      , cron
   exposed-modules:
       Error
       Date
@@ -59,6 +60,7 @@ library
       Http
       News
       Weather
+      Schedule
       Utils
   other-modules:
       Paths_dailyHASK
