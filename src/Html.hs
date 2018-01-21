@@ -65,18 +65,21 @@ articleToHtml article = let
   publishedAt = handleNull article News.getArticlePublishedAt
   in H.div $ do
     H.article $ do
-      h3 $ a ! href url $ toHtml title
-      h5 $ toHtml $ sourceName
-      h4 $ toHtml $ description
+      h4 $ b $ a ! href url $ toHtml title
+      h5 $ b $ toHtml $ sourceName
+      h5 ! A.style "color:#A9A9A9" $ toHtml $ author
+      h5 $ i $ toHtml $ description
 
 currentWeatherToHtml :: Weather -> Html
 currentWeatherToHtml weather = let
-  (temp, pressure, humidity) = (show $ round $ Weather.kelvinToCelsius $ Weather.getTemp weather
-                                , show $ Weather.getPressure weather
-                                , show $ Weather.getHumidity weather)
+  handleNull weather f = either Prelude.id Prelude.id $ Utils.handleNullValue $ f weather
+  (temp, pressure, humidity, description) = (show $ round $ Weather.kelvinToCelsius $ Weather.getTemp weather
+                                            , show $ Weather.getPressure weather
+                                            , show $ Weather.getHumidity weather
+                                            , Text.unpack $ handleNull weather Weather.getDescription)
   in H.div $ do
-    h2 "The current weather: "
-    h3 $ toHtml $ "Temperature: " ++ temp ++ " °C; " ++ "pressure: " ++ pressure ++ " hPa; " ++ "humidity: " ++ humidity ++ " %"
+    h3 $ toHtml $ "The current weather (" ++ description ++ "): "
+    h4 $ toHtml $ "Temperature: " ++ temp ++ " °C; " ++ "pressure: " ++ pressure ++ " hPa; " ++ "humidity: " ++ humidity ++ " %"
 
 welcomeMailTemplate :: User -> Html
 welcomeMailTemplate user = docTypeHtml $ do
@@ -105,7 +108,7 @@ dailyMailTemplate user news weather = let
         H.title "dailyHASK"
       body $ do
         currentWeatherToHtml weather
-        h2 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today (" ++ totalHeader ++ ")"
+        h3 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today"
         ul $ forM_ articles (li . articleToHtml)
 
 -- |The 'renderDailyMailTemplate' returns a string containing HTML code corresponding to the daily-mail template
