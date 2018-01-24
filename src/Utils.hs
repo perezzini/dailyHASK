@@ -13,6 +13,7 @@ module Utils
     , stringToInteger
     , handleNullValue
     , isInt
+    , inList
     ) where
 
 import Data.Text as Text hiding (map)
@@ -50,9 +51,17 @@ handleNullValue :: Maybe a -> Either Text a
 handleNullValue (Just v) = Right v
 handleNullValue _ = Left $ Text.pack "Not available"
 
+-- |The 'isInt' function takes a 'String' value and checks if it represents an Int
 isInt :: String -> Bool
 isInt s = let
   s' = Read.readMaybe s :: Maybe Int
   in if M.isNothing s'
     then False
     else True
+
+-- |The 'inList' function takes a value, and a list of same type, and checks if
+-- the mentioned value exists in input list
+inList :: Eq a => a -> [a] -> Bool
+inList value list = case Prelude.length $ Prelude.filter (\v -> v == value) list of
+  0 -> False
+  _ -> True
