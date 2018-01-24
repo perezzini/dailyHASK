@@ -71,8 +71,7 @@ sendWelcomeMailToUser user = do
 collection :: IO Text
 collection = do
   value <- Config.getValue "database.usersCollection"
-  let value' = M.fromJust value
-  return $ Text.pack value'
+  return $ Text.pack value
 
 doWork :: IO ()
 doWork = let
@@ -97,7 +96,7 @@ doWork = let
 
     let userRecord = User _id name' email location' interests :: User
 
-    news <- News.getNews interests "popularity" "en"
+    news <- News.getNews interests "en"
     currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
     if M.isNothing news
       then E.callError "Error. Main: couldn't retrieve news articles. Aborting..."
@@ -149,7 +148,7 @@ main' h m = do
       when (scheduleMatches schedule now) doWork
       threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold
     where
-      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *") -- m h * * * * = "Everyday at h:m hours"
+      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *") -- m h * * * = "Everyday at h:m hours"
       schedule = case Schedule.createScheduleFromText cronSpec of
         Just s -> s
         otherwise -> E.callError "Error at configuring cron schedule (it should not happen). Aborting..."
