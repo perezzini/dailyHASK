@@ -211,39 +211,41 @@ getTotalPublishers = totalPublishers
 endpoint :: String -> IO Url
 endpoint e = do
   value <- Config.getValue e
-  if M.isNothing value
-    then let
-      errorMsg = "Error: " ++ e ++ " config value not found"
-      in E.callError errorMsg
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.news.key"
-  if M.isNothing value
-    then E.callError "Error: api.news.key not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
+
+sortBy :: IO Text
+sortBy = do
+  value <- Config.getValue "api.news.endpoint.everything.sortBy"
+  case Utils.inList value ["relevancy", "popularity", "publishedAt"] of
+    True -> return $ Text.pack $ value
+    _ -> E.callError "Error. Value of key api.news.endpoint.everything.sortBy not known. Aborting..."
 
 apiRequestOk :: Text -> Bool
 apiRequestOk t = if t == "OK" || t == "ok"
   then True
   else False
 
--- |The 'getNews' function takes a list of interests, a parameter about how to sort retrieved news, and wanted language.
+-- |The 'getNews' function takes a list of interests, and wanted language.
 -- It returns a value of type 'News' mathing these interests, and specified language, or 'Nothing' in case the GET
 -- request to NewsAPI.org's API fails. The news are from today and sorted by specified parameter.
 -- Explore NewsAPI.org website for more information about the 'Everything' endpoint parameters
-getNews :: [Interest] -> Text -> Text -> IO (Maybe News)
-getNews interests sort lang = do
+getNews :: [Interest] -> Text -> IO (Maybe News)
+getNews interests lang = do
   putStrLn "[getNews] Start of GET request from news API..."
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
+  sortBy <- sortBy
   today <- Date.today
   let today' = Text.pack today
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
   let opts = defaults & param "apiKey" .~ [key]
           & param "q" .~ [interests']
-          & param "sortBy" .~ [sort]
+          & param "sortBy" .~ [sortBy]
           & param "language" .~ [lang]
           & param "from" .~ [today']
   req <- getWith opts (Text.unpack endpoint)
