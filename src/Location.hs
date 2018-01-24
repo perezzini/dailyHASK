@@ -83,16 +83,12 @@ addressToString = Text.unpack
 endpoint :: IO Url
 endpoint = do
   value <- Config.getValue "api.googlemaps.endpoint"
-  if M.isNothing value
-    then E.callError "Error: api.googlemaps.endpoint config value not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.googlemaps.key"
-  if M.isNothing value
-    then E.callError "Error: api.googlemaps.key not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 apiRequestOk :: Text -> Bool
 apiRequestOk t = if t == "OK" || t == "ok"

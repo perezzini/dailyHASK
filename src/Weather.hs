@@ -70,16 +70,12 @@ getDescription = description
 endpoint :: IO Url
 endpoint = do
   value <- Config.getValue "api.owm.endpoint.current"
-  if M.isNothing value
-    then E.callError "Error: api.owm.endpoint.current config value not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.owm.key"
-  if M.isNothing value
-    then E.callError "Error: api.owm.key not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 apiRequestOk :: Maybe Integer -> Bool
 apiRequestOk (Just n) = if n == 200

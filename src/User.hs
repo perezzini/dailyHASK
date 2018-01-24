@@ -72,8 +72,7 @@ data User = User {
 collection :: IO Text
 collection = do
   value <- Config.getValue "database.usersCollection"
-  let value' = M.fromJust value
-  return $ Text.pack value'
+  return $ Text.pack value
 
 -- |The 'getID' function takes a 'User' and returns its '_id'
 getID :: User -> ID

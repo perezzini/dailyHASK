@@ -30,23 +30,17 @@ import Error as E
 server :: IO String
 server = do
   value <- Config.getValue "database.server"
-  if M.isNothing value
-    then E.callError "Error: database.server config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 port :: IO String
 port = do
   value <- Config.getValue "database.port"
-  if M.isNothing value
-    then E.callError "Error: database.port config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 db :: IO String
 db = do
   value <- Config.getValue "database.db"
-  if M.isNothing value
-    then E.callError "Error: database.db config file value not found"
-    else return $ M.fromJust value
+  return $ value
 
 -- |'open' returns a TCP connection to a database defined in the
 -- /app.cfg file

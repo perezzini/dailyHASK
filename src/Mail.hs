@@ -50,30 +50,22 @@ isAddressValid address = EValidate.isValidEmail address
 smtpHostname :: IO String
 smtpHostname = do
   value <- Config.getValue "smtp.hostname"
-  if M.isNothing value
-    then E.callError "Error: smtp.hostname config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 smtpUserName :: IO String
 smtpUserName = do
   value <- Config.getValue "smtp.user.name.address"
-  if M.isNothing value
-    then E.callError "Error: smtp.user.name.address config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 smtpUserNamePassword :: IO String
 smtpUserNamePassword = do
   value <- Config.getValue "smtp.user.password"
-  if M.isNothing value
-    then E.callError "Error: smtp.user.password config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 smtpMailAddressAlias :: IO String
 smtpMailAddressAlias = do
   value <- Config.getValue "smtp.mail.address.alias"
-  if M.isNothing value
-    then E.callError "Error: smtp.mail.address.alias config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 -- |'connect' connects to an SMTP SSL server using a SMTP hostname from the config file
 connect :: IO SMTPConnection
