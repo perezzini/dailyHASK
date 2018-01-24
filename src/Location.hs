@@ -97,18 +97,20 @@ apiRequestOk t = if t == "OK" || t == "ok"
 
 -- |The 'getGeoLocFromString' takes a string geographic location address and makes a
 -- GET request to Google Maps API services to retrieve 'lat' and 'long'.
--- It returns 'Nothing' in case the request fails
+-- It returns 'Nothing' in case the request fails. The input parameter must not be empty
 getGeoLocFromString :: String -> IO (Maybe GeoLoc)
-getGeoLocFromString address = do
-  putStrLn "Start of GET request from locations API..."
-  endpoint <- endpoint
-  key <- key
-  let address' = Text.pack $ Utils.replaceCharByCharInString ' ' '+' address
-  let opts = defaults & param "key" .~ [key] & param "address" .~ [address']
-  req <- getWith opts (Text.unpack endpoint)
-  let headerStatusCode = req ^. responseStatus . statusCode
-  let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
-  putStrLn "End of GET request from locations API"
-  if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
-    then return (decode $ req ^. responseBody)
-    else return $ Nothing
+getGeoLocFromString address = case Prelude.length address of
+  0 -> return $ Nothing
+  otherwise -> do
+    putStrLn "Start of GET request from locations API..."
+    endpoint <- endpoint
+    key <- key
+    let address' = Text.pack $ Utils.replaceCharByCharInString ' ' '+' address
+    let opts = defaults & param "key" .~ [key] & param "address" .~ [address']
+    req <- getWith opts (Text.unpack endpoint)
+    let headerStatusCode = req ^. responseStatus . statusCode
+    let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
+    putStrLn "End of GET request from locations API"
+    if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
+      then return (decode $ req ^. responseBody)
+      else return $ Nothing
