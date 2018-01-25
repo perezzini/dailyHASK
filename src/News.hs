@@ -218,36 +218,52 @@ key = do
   value <- Config.getValue "api.news.key"
   return $ Text.pack value
 
-sortBy :: IO Text
-sortBy = do
+sortByOpt :: IO Text
+sortByOpt = do
   value <- Config.getValue "api.news.endpoint.everything.sortBy"
   case Utils.inList value ["relevancy", "popularity", "publishedAt"] of
     True -> return $ Text.pack $ value
     _ -> E.callError "Error. Value of key api.news.endpoint.everything.sortBy not known. Aborting..."
+
+languageOpt :: IO String
+languageOpt = do
+  value <- Config.getValue "api.news.endpoint.everything.language"
+  case Utils.inList value ["ar", "de", "en", "es", "fr", "he", "it", "nl", "no", "pt", "ru", "se", "ud", "zh", "all"] of
+    True -> return value
+    _ -> E.callError "Error. Value of key api.news.endpoint.everything.language not known. Aborting..."
 
 apiRequestOk :: Text -> Bool
 apiRequestOk t = if t == "OK" || t == "ok"
   then True
   else False
 
--- |The 'getNews' function takes a list of interests, and wanted language.
--- It returns a value of type 'News' mathing these interests, and specified language, or 'Nothing' in case the GET
--- request to NewsAPI.org's API fails. The news are from today and sorted by specified parameter.
+-- |The 'getNews' function takes a list of interests.
+-- It returns a value of type 'News' mathing these interests (with setted sortBy, and language options in
+-- config file), or 'Nothing' in case the GET request to NewsAPI.org's API fails. It will return at most
+-- 100 articles from today.
 -- Explore NewsAPI.org website for more information about the 'Everything' endpoint parameters
-getNews :: [Interest] -> Text -> IO (Maybe News)
-getNews interests lang = do
+getNews :: [Interest] -> IO (Maybe News)
+getNews interests = do
   putStrLn "[getNews] Start of GET request from news API..."
   endpoint <- endpoint "api.news.endpoint.everything"
   key <- key
-  sortBy <- sortBy
+  sortByOpt <- sortByOpt
+  languageOpt <- languageOpt
   today <- Date.today
   let today' = Text.pack today
   let interests' = Text.pack $ Utils.connectListOfStrings (Interest.fromDataType interests) " OR "
-  let opts = defaults & param "apiKey" .~ [key]
-          & param "q" .~ [interests']
-          & param "sortBy" .~ [sortBy]
-          & param "language" .~ [lang]
-          & param "from" .~ [today']
+  let opts = case languageOpt of
+              "all" -> defaults & param "apiKey" .~ [key]
+                        & param "q" .~ [interests']
+                        & param "sortBy" .~ [sortByOpt]
+                        & param "from" .~ [today']
+                        & param "pageSize" .~ ["100"]
+              otherwise -> defaults & param "apiKey" .~ [key]
+                            & param "q" .~ [interests']
+                            & param "sortBy" .~ [sortByOpt]
+                            & param "language" .~ [Text.pack languageOpt]
+                            & param "from" .~ [today']
+                            & param "pageSize" .~ ["100"]
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^. responseBody . Lens.key "status" . Lens._String
