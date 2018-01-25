@@ -96,7 +96,7 @@ doWork = let
 
     let userRecord = User _id name' email location' interests :: User
 
-    news <- News.getNews interests "en"
+    news <- News.getNews interests
     currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
     if M.isNothing news
       then E.callError "Error. Main: couldn't retrieve news articles. Aborting..."
