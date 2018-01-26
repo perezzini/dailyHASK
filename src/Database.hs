@@ -30,26 +30,20 @@ import Error as E
 server :: IO String
 server = do
   value <- Config.getValue "database.server"
-  if M.isNothing value
-    then E.callError "Error: database.server config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 port :: IO String
 port = do
   value <- Config.getValue "database.port"
-  if M.isNothing value
-    then E.callError "Error: database.port config value not found"
-    else return $ M.fromJust value
+  return $ value
 
 db :: IO String
 db = do
   value <- Config.getValue "database.db"
-  if M.isNothing value
-    then E.callError "Error: database.db config file value not found"
-    else return $ M.fromJust value
+  return $ value
 
 -- |'open' returns a TCP connection to a database defined in the
--- /app.cfg file
+-- /app.cfg config file placed in the project's root folder
 open :: IO MongoDB.Pipe
 open = do
   server <- server
@@ -103,7 +97,7 @@ findOne pipe fields collection = do
   exec <- run pipe $ MongoDB.findOne $ MongoDB.select fields collection
   return $ exec
 
--- |The 'findAll' function fetches all documents from a given collection.
+-- |The 'findAll' function fetches all documents from a given collection, that preserve some property
 findAll :: MongoDB.Pipe -> MongoDB.Selector -> MongoDB.Collection -> IO [Bson.Document]
 findAll pipe fields collection = do
   exec <- run pipe $ MongoDB.find (MongoDB.select fields collection) >>= MongoDB.rest

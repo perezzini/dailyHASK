@@ -1,7 +1,8 @@
 {-|
 Module      : Weather
 
-Definition of 'Weather' data type. Retrieves current weather information from Open Weather Map API
+Definition of 'Weather' data type. Definition of functions to retrieve current
+-- weather information from Open Weather Map API
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
@@ -12,6 +13,7 @@ module Weather
     , getTemp
     , getPressure
     , getHumidity
+    , getDescription
     , getCurrentWeatherFromGeoLoc
     , kelvinToCelsius
     ) where
@@ -25,6 +27,7 @@ import Error as E
 
 import Data.Text as Text
 import Data.Maybe as M
+import qualified Data.Vector as V
 
 import Data.Aeson
 import qualified Data.Aeson.Lens as Lens (key, _Integer)
@@ -35,15 +38,19 @@ data Weather = Weather {
   temp :: Double
   , pressure :: Int
   , humidity :: Int
+  , description :: Maybe Text
 } deriving (Show)
 
 instance FromJSON Weather where
   parseJSON = withObject "Weather" $ \v -> do
     main <- v .: "main"
+    weather <- v .: "weather"
+    let weatherObject = V.head weather
     temp <- main .: "temp"
     pressure <- main .: "pressure"
     humidity <- main .: "humidity"
-    return (Weather temp pressure humidity)
+    description <- weatherObject .: "description"
+    return (Weather temp pressure humidity description)
 
 -- |The 'getTemp' function takes a 'Weather' value and returns its 'temp'
 getTemp :: Weather -> Double
@@ -57,19 +64,19 @@ getPressure = pressure
 getHumidity :: Weather -> Int
 getHumidity = humidity
 
+-- |The 'getHumidity' function takes a 'Weather' value and returns its 'description'
+getDescription :: Weather -> Maybe Text
+getDescription = description
+
 endpoint :: IO Url
 endpoint = do
   value <- Config.getValue "api.owm.endpoint.current"
-  if M.isNothing value
-    then E.callError "Error: api.owm.endpoint.current config value not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 key :: IO Text
 key = do
   value <- Config.getValue "api.owm.key"
-  if M.isNothing value
-    then E.callError "Error: api.owm.key not found"
-    else return $ Text.pack $ M.fromJust value
+  return $ Text.pack value
 
 apiRequestOk :: Maybe Integer -> Bool
 apiRequestOk (Just n) = if n == 200

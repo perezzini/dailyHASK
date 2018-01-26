@@ -1,8 +1,8 @@
 {-|
 Module      : User
 
-Definition of the 'User' data type along multiple functions concerning 'User' values. Creates
-and uploads new users to database
+Definition of the 'User' data type, and multiple functions to handle it. Defines functions
+-- to create and upload new users to a given database
 -}
 
 
@@ -72,8 +72,7 @@ data User = User {
 collection :: IO Text
 collection = do
   value <- Config.getValue "database.usersCollection"
-  let value' = M.fromJust value
-  return $ Text.pack value'
+  return $ Text.pack value
 
 -- |The 'getID' function takes a 'User' and returns its '_id'
 getID :: User -> ID

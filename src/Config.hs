@@ -1,7 +1,8 @@
 {-|
 Module      : Config
 
-Definition of functions to get values of certain keys form a configuration file named app.cfg placed in root folder
+Definition of functions to get values of certain keys from a configuration file named app.cfg placed in the
+-- project's foot folder
 -}
 
 module Config
@@ -18,11 +19,14 @@ import qualified Error as E
 appConfigFile :: String
 appConfigFile = "/app.cfg"
 
--- |The 'getValue' function gets a value from a given key stored in /app.cfg
-getValue :: String -> IO (Maybe String)
+-- |The 'getValue' function takes a key and maybe returns its value.
+-- Exits program with error in case key could not be found
+getValue :: String -> IO String
 getValue key = do
   currDir <- Dir.getCurrentDirectory
   let filePath = currDir ++ appConfigFile
   configFile <- TConfig.readConfig filePath
   let value = TConfig.getValue key configFile
-  return $ value
+  case value of
+    Just v -> return $ v
+    otherwise -> E.callError ("Error. Key " ++ key ++ "not found in config file. Aborting...")

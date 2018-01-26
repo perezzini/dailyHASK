@@ -7,7 +7,6 @@ import Prelude hiding (last)
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever, when)
 import System.Cron
-import System.Cron.Parser
 
 import Data.Maybe as M
 import Data.Text as Text hiding (words, unword, map)
@@ -25,6 +24,8 @@ import Html
 import Database as DB
 import Error as E
 import Config
+import Schedule
+import Utils
 
 createNewGeoLoc :: String -> IO Location.GeoLoc
 createNewGeoLoc address = do
@@ -62,7 +63,7 @@ sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
   conn <- Mail.connectAndLogin
   putStrLn "Sending welcome email to user..."
-  Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
+  Mail.send conn userEmailAddress "Welcome to dailyHASK 🎉" "" (Html.renderWelcomeMailTemplate user)
   putStrLn "Welcome email sent"
   Mail.closeConnection conn
   return ()
@@ -70,8 +71,7 @@ sendWelcomeMailToUser user = do
 collection :: IO Text
 collection = do
   value <- Config.getValue "database.usersCollection"
-  let value' = M.fromJust value
-  return $ Text.pack value'
+  return $ Text.pack value
 
 doWork :: IO ()
 doWork = let
@@ -98,14 +98,16 @@ doWork = let
 
     news <- News.getNews interests
     currentWeather <- Weather.getCurrentWeatherFromGeoLoc $ User.getLocation userRecord
-    if M.isNothing news || M.isNothing currentWeather
-      then E.callError "Error. Main: couldn't retrive news articles or weather information. Aborting..."
-      else let
-        news' = M.fromJust news
-        currentWeather' = M.fromJust currentWeather
-        in do
-          Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
-          putStrLn "Daily mail sent to user..."
+    if M.isNothing news
+      then E.callError "Error. Main: couldn't retrieve news articles. Aborting..."
+      else if M.isNothing currentWeather
+        then  E.callError "Error. Main: couldn't retrieve weather information. Aborting..."
+        else let
+          news' = M.fromJust news
+          currentWeather' = M.fromJust currentWeather
+          in do
+            Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
+            putStrLn "Success: daily mail sent to user..."
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
   work users conn = do
@@ -129,7 +131,9 @@ main = do
   h <- getLine
   putStrLn ">> Select minute parameter to construct cronjob"
   m <- getLine
-  main' h m
+  if Utils.isInt h && Utils.isInt m
+    then main' h m
+    else E.callError "Error. Main: hour or minute parameter not Integer"
 
 main' :: String -> String -> IO ()
 main' h m = do
@@ -144,5 +148,7 @@ main' h m = do
       when (scheduleMatches schedule now) doWork
       threadDelay 60000000 -- delay forever loop for 1 minute, so statement 'scheduleMatches schedule now' would not hold
     where
-      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *")
-      schedule = either (E.callError "Error at configuring cron schedule (it should not happen). Aborting...") id (parseCronSchedule cronSpec)
+      cronSpec = Text.pack (m ++ " " ++ h ++ " * * *") -- m h * * * = "Everyday at h:m hours"
+      schedule = case Schedule.createScheduleFromText cronSpec of
+        Just s -> s
+        otherwise -> E.callError "Error at configuring cron schedule (it should not happen). Aborting..."
