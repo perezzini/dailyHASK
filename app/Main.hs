@@ -63,7 +63,7 @@ sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
   conn <- Mail.connectAndLogin
   putStrLn "Sending welcome email to user..."
-  Mail.send conn userEmailAddress "Welcome to dailyHASK" "plain text body" (Html.renderWelcomeMailTemplate user)
+  Mail.send conn userEmailAddress "Welcome to dailyHASK 🎉" "" (Html.renderWelcomeMailTemplate user)
   putStrLn "Welcome email sent"
   Mail.closeConnection conn
   return ()
