@@ -1,8 +1,8 @@
 {-|
 Module      : User
 
-Definition of the 'User' data type along multiple functions concerning 'User' values. Creates
-and uploads new users to database
+Definition of the 'User' data type, and multiple functions to handle it. Defines functions
+-- to create and upload new users to a given database
 -}
 
 

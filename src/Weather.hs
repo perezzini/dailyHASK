@@ -1,7 +1,8 @@
 {-|
 Module      : Weather
 
-Definition of 'Weather' data type. Retrieves current weather information from Open Weather Map API
+Definition of 'Weather' data type. Definition of functions to retrieve current
+-- weather information from Open Weather Map API
 -}
 
 {-# LANGUAGE OverloadedStrings #-}

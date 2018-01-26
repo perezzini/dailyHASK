@@ -1,9 +1,8 @@
 {-|
 Module      : News
 
-Definition of 'News' and 'Articles' data types along multiple functions to handle them.
-Defines a GET request to retrieve news from NewsApi.org services that match multiple interests
-and were published today at some time
+Definition of 'News' and 'Articles' data types, and multiple functions to handle them.
+Defines a GET request functions to retrieve news from NewsApi.org services
 -}
 
 
@@ -241,7 +240,7 @@ apiRequestOk t = if t == "OK" || t == "ok"
 -- It returns a value of type 'News' mathing these interests (with setted sortBy, and language options in
 -- config file), or 'Nothing' in case the GET request to NewsAPI.org's API fails. It will return at most
 -- 100 articles from today.
--- Explore NewsAPI.org website for more information about the 'Everything' endpoint parameters
+-- Explore NewsAPI.org website for more information about the Everything endpoint input parameters
 getNews :: [Interest] -> IO (Maybe News)
 getNews interests = do
   putStrLn "[getNews] Start of GET request from news API..."
@@ -270,7 +269,7 @@ getNews interests = do
   putStrLn "[getNews] End of GET request from news API"
   if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
-    else return $ Nothing
+    else return Nothing
 
 -- |The 'getSources' function takes a specific category, language, and country, and maybe returns the corresponding
 -- sources making a GET request to NewsAPI.org's API. If this fails, it'll return 'Nothing'.
@@ -290,4 +289,4 @@ getSources category language country = do
   putStrLn "[getSources] End of GET request from news API"
   if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
-    else return $ Nothing
+    else return Nothing

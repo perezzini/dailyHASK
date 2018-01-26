@@ -14,7 +14,7 @@ import Data.Time.Clock
 import Data.Time.Calendar
 import Data.Time.LocalTime
 
--- |'getCurrentTimeFromServer' returns current time of server using actual time zone, and convert it to 'UTCTime' format
+-- |'getCurrentTimeFromServer' returns current time of server using actual time zone, and converts it to 'UTCTime' format
 getCurrentTimeFromServer :: IO UTCTime
 getCurrentTimeFromServer = do
   tz <- getCurrentTimeZone

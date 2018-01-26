@@ -1,8 +1,8 @@
 {-|
 Module      : Location
 
-Definition of 'GeoLoc' data type along multiple functions concerning 'GeoLoc' values. Defines
--- a GET request to retrieve geographic location from Google Maps API services
+Definition of 'GeoLoc' data type, and multiple functions to handle it. Also defines
+-- a GET request function to retrieve geographic location from Google Maps API services
 -}
 
 {-# LANGUAGE OverloadedStrings #-}

@@ -43,7 +43,7 @@ db = do
   return $ value
 
 -- |'open' returns a TCP connection to a database defined in the
--- /app.cfg file
+-- /app.cfg config file placed in the project's root folder
 open :: IO MongoDB.Pipe
 open = do
   server <- server

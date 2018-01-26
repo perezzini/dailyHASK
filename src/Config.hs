@@ -1,7 +1,8 @@
 {-|
 Module      : Config
 
-Definition of functions to get values of certain keys form a configuration file named app.cfg placed in root folder
+Definition of functions to get values of certain keys from a configuration file named app.cfg placed in the
+-- project's foot folder
 -}
 
 module Config

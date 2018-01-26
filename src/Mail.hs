@@ -1,8 +1,7 @@
 {-|
 Module      : Mail
 
-HaskellNet-SSL package abstraction, and definition of types along functions to handle
--- them
+HaskellNet-SSL package abstraction
 -}
 
 {-# LANGUAGE OverloadedStrings #-}

@@ -1,7 +1,7 @@
 {-|
 Module      : Utils
 
-Definition of several library's utilities
+Definition of several utilities
 -}
 
 module Utils

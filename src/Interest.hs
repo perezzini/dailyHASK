@@ -1,7 +1,7 @@
 {-|
 Module      : Interest
 
-Definition of 'Interest' type along multiple functions concerning 'Interest' values
+Definition of the 'Interest' type, and multiple functions to handle it
 -}
 
 module Interest
