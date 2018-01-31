@@ -103,11 +103,10 @@ auth conn = do
 
 -- |The 'send' function takes a SMTP connetion, a receiver, a subject, a plain text body, a HTML body, and
 -- sends an e-mail
-send :: SMTPConnection -> Address -> Subject -> Text -> String -> IO ()
-send conn receiver subject plainTextBody htmlBody = do
+send :: SMTPConnection -> Address -> Subject -> String -> IO ()
+send conn receiver subject htmlBody = do
   let receiver' = Text.unpack receiver :: String
   senderAlias <- smtpMailAddressAlias
   let subject' = Text.unpack subject :: String
-  let plainTextBody' = L.pack $ Text.unpack plainTextBody :: L.Text
   let htmlBody' = L.pack htmlBody :: L.Text
-  SMTP.sendMimeMail receiver' senderAlias subject' plainTextBody' htmlBody' [] conn
+  SMTP.sendMimeMail receiver' senderAlias subject' "" htmlBody' [] conn -- do not use plain text body
