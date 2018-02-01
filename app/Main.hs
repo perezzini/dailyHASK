@@ -63,7 +63,7 @@ sendWelcomeMailToUser user = do
   let userEmailAddress = User.getEmail user
   conn <- Mail.connectAndLogin
   putStrLn "Sending welcome email to user..."
-  Mail.send conn userEmailAddress "Welcome to dailyHASK 🎉" "" (Html.renderWelcomeMailTemplate user)
+  Mail.send conn userEmailAddress "Welcome to dailyHASK 🎉" (Html.renderWelcomeMailTemplate user)
   putStrLn "Welcome email sent"
   Mail.closeConnection conn
   return ()
@@ -106,7 +106,7 @@ doWork = let
           news' = M.fromJust news
           currentWeather' = M.fromJust currentWeather
           in do
-            Mail.send conn email "Your dailyHASK" "" (Html.renderDailyMailTemplate userRecord news' currentWeather')
+            Mail.send conn email "Your dailyHASK" (Html.renderDailyMailTemplate userRecord news' currentWeather')
             putStrLn "Success: daily mail sent to user..."
 
   work :: [Bson.Document] -> SMTPConnection -> IO ()
