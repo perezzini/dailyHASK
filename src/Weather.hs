@@ -88,7 +88,7 @@ apiRequestOk _ = False
 -- the Open Weather Map API using latitude and longitude from corresponding location
 getCurrentWeatherFromGeoLoc :: Location.GeoLoc -> IO (Maybe Weather)
 getCurrentWeatherFromGeoLoc geoLoc = do
-  putStrLn "Start of GET request from weather API..."
+  putStrLn "[getCurrentWeatherFromGeoLoc] Start of GET request from weather API..."
   endpoint <- endpoint
   key <- key
   let lat = Text.pack $ show $ Location.getLat geoLoc
@@ -99,7 +99,7 @@ getCurrentWeatherFromGeoLoc geoLoc = do
   req <- getWith opts (Text.unpack endpoint)
   let headerStatusCode = req ^. responseStatus . statusCode
   let apiStatus = req ^? responseBody . Lens.key "cod" . Lens._Integer
-  putStrLn "End of GET request from weather API"
+  putStrLn "[getCurrentWeatherFromGeoLoc] End of GET request from weather API"
   if Http.isGETRequestOk headerStatusCode && apiRequestOk apiStatus
     then return (decode $ req ^. responseBody)
     else return $ Nothing

@@ -101,8 +101,8 @@ auth conn = do
     then E.callError "Mail. Auth denied. Aborting..."
     else return $ ()
 
--- |The 'send' function takes a SMTP connetion, a receiver, a subject, a plain text body, a HTML body, and
--- sends an e-mail
+-- |The 'send' function takes a SMTP connetion, a receiver, a subject, and a HTML body. It sends
+-- the respective e-mail
 send :: SMTPConnection -> Address -> Subject -> String -> IO ()
 send conn receiver subject htmlBody = do
   let receiver' = Text.unpack receiver :: String

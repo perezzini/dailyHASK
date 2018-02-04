@@ -61,7 +61,7 @@ articleToHtml article = let
   title = handleNull article News.getArticleTitle
   description = handleNull article News.getArticleDescripton
   url = fromString $ Text.unpack $ News.getArticleUrl article :: AttributeValue
-  urlToImage = handleNull article News.getArticleUrlToImage
+  urlToImage = fromString $ Text.unpack $ handleNull article News.getArticleUrlToImage :: AttributeValue
   publishedAt = handleNull article News.getArticlePublishedAt
   in H.div $ do
     H.article $ do
@@ -69,16 +69,19 @@ articleToHtml article = let
       h5 $ b $ toHtml $ sourceName
       h5 ! A.style "color:#A9A9A9" $ toHtml $ author
       h5 $ i $ toHtml $ description
+      img ! src urlToImage
 
-currentWeatherToHtml :: Weather -> Html
-currentWeatherToHtml weather = let
+currentWeatherToHtml :: Weather -> User -> Html
+currentWeatherToHtml weather user = let
   handleNull weather f = either Prelude.id Prelude.id $ Utils.handleNullValue $ f weather
+  userGeoLoc = User.getLocation user
+  userLocationAddress = Text.unpack $ Location.getAddress userGeoLoc
   (temp, pressure, humidity, description) = (show $ round $ Weather.kelvinToCelsius $ Weather.getTemp weather
                                             , show $ Weather.getPressure weather
                                             , show $ Weather.getHumidity weather
                                             , Text.unpack $ handleNull weather Weather.getDescription)
   in H.div $ do
-    h3 $ toHtml $ "The current weather (" ++ description ++ "): "
+    h3 $ toHtml $ "Current weather in " ++ userLocationAddress ++ " (" ++ description ++ "): "
     h4 $ toHtml $ "Temperature: " ++ temp ++ " °C; " ++ "pressure: " ++ pressure ++ " hPa; " ++ "humidity: " ++ humidity ++ " %"
 
 welcomeMailTemplate :: User -> Html
@@ -107,7 +110,7 @@ dailyMailTemplate user news weather = let
       H.head $ do
         H.title "dailyHASK"
       body $ do
-        currentWeatherToHtml weather
+        currentWeatherToHtml weather user
         h3 $ toHtml $ userFirstName ++ ", the following news articles match your interests and were published today"
         ul $ forM_ articles (li . articleToHtml)
 
