@@ -53,4 +53,4 @@ stack build
 stack exec dailyHASK-exe
 ```
 
-> Project implemented for a Computer Science class at [National University of Rosario](http://www.unr.edu.ar), [DCC](https://dcc.fceia.unr.edu.ar/)
+> Project implemented for a Computer Science class at [National University of Rosario](http://www.unr.edu.ar), [DCC](https://dcc.fceia.unr.edu.ar/), and presented on Feb 20 of 2018
